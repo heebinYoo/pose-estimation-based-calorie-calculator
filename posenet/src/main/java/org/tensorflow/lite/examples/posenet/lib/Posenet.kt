@@ -49,18 +49,25 @@ enum class BodyPart {
 }
 
 class Position {
+  @kotlin.jvm.JvmField
   var x: Int = 0
+  @kotlin.jvm.JvmField
   var y: Int = 0
 }
 
 class KeyPoint {
+  @kotlin.jvm.JvmField
   var bodyPart: BodyPart = BodyPart.NOSE
+  @kotlin.jvm.JvmField
   var position: Position = Position()
+  @kotlin.jvm.JvmField
   var score: Float = 0.0f
 }
 
 class Person {
+  @kotlin.jvm.JvmField
   var keyPoints = listOf<KeyPoint>()
+  @kotlin.jvm.JvmField
   var score: Float = 0.0f
 }
 
@@ -70,7 +77,9 @@ enum class Device {
   GPU
 }
 
-class Posenet(
+
+class Posenet
+@JvmOverloads constructor(
   val context: Context,
   val filename: String = "posenet_model.tflite",
   val device: Device = Device.CPU
