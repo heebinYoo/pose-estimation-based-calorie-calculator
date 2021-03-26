@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "385985424545",
+    "project_id": "cohesive-vine-308400",
+    "storage_bucket": "cohesive-vine-308400.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:385985424545:android:094c2e8877c624444314e0",
+        "android_client_info": {
+          "package_name": "com.example.capstone2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "385985424545-aq3qk7lupt0732gee50p89cippgjlp99.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.capstone2",
+            "certificate_hash": "b744ac55b1d0376f9790466c41b213e655d8b9c6"
+          }
+        },
+        {
+          "client_id": "385985424545-e7tbi2jul1qnbpclhb806gtje76mpnuk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCS9glP2qQEuIYGGo9LODp_53u0RMSrrhY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "385985424545-e7tbi2jul1qnbpclhb806gtje76mpnuk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
