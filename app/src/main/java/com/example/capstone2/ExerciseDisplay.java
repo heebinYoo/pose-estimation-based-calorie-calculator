@@ -94,7 +94,7 @@ public class ExerciseDisplay extends AppCompatActivity implements SurfaceHolder.
         public void onPermissionGranted() {
             camera = Camera.open();
             camera.setDisplayOrientation(90);
-            surfaceView = (SurfaceView)findViewById(R.id.surfaeView);
+            surfaceView = (SurfaceView)findViewById(R.id.surfaceView);
             surfaceHolder = surfaceView.getHolder();
             surfaceHolder.addCallback(ExerciseDisplay.this);
             surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
