@@ -38,7 +38,9 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation project(path: ':posenet')
     implementation 'gun0912.ted:tedpermission:2.2.3'
+    implementation 'kr.co.prnd:youtube-player-view:1.4.0'
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+
 }
