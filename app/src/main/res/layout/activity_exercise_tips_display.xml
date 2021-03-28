@@ -9,10 +9,10 @@
     <TextView
         android:id="@+id/textView"
         android:layout_width="0dp"
-        android:layout_height="125dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="34dp"
+        android:layout_height="325dp"
+        android:layout_marginStart="21dp"
+        android:layout_marginEnd="21dp"
+        android:layout_marginBottom="16dp"
         android:text="설명"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -22,12 +22,12 @@
         android:id="@+id/squatTipsButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="19dp"
         android:layout_marginTop="16dp"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="24dp"
         android:text="squat"
         app:layout_constraintBottom_toTopOf="@+id/you_tube_player_view"
         app:layout_constraintEnd_toStartOf="@+id/deadliftTipsButton"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
@@ -35,36 +35,34 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginEnd="2dp"
         android:text="deadlift"
         app:layout_constraintBottom_toTopOf="@+id/you_tube_player_view"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/plankTipsButton"
+        app:layout_constraintStart_toEndOf="@+id/squatTipsButton"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/plankTipsButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
         android:layout_marginTop="16dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginEnd="18dp"
         android:text="plank"
         app:layout_constraintBottom_toTopOf="@+id/you_tube_player_view"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/deadliftTipsButton"
         app:layout_constraintTop_toTopOf="parent" />
 
     <kr.co.prnd.YouTubePlayerView
         android:id="@+id/you_tube_player_view"
         android:layout_width="0dp"
-        android:layout_height="451dp"
-        android:layout_marginStart="2dp"
-        android:layout_marginEnd="2dp"
-        android:layout_marginBottom="32dp"
+        android:layout_height="250dp"
+        android:layout_marginStart="1dp"
+        android:layout_marginEnd="1dp"
         app:layout_constraintBottom_toTopOf="@+id/textView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:videoId="VIDEO_ID" />
+        app:videoId="Fk9j6pQ6ej8" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
