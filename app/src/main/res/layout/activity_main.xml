@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:rotationX="-17"
     tools:context=".MainActivity">
 
     <Button
@@ -11,11 +12,16 @@
         android:layout_width="233dp"
         android:layout_height="0dp"
         android:layout_marginBottom="77dp"
+        android:rotationX="123"
         android:text="Daily pedometer"
         app:layout_constraintBottom_toTopOf="@+id/toExerciseTips"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toExercise" />
+
+
+
+
 
     <Button
         android:id="@+id/toExerciseTips"
@@ -40,4 +46,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.gms.common.SignInButton
+        android:id="@+id/sign_in_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:layout_marginBottom="26dp"
+        app:layout_constraintBottom_toTopOf="@+id/toExercise"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        tools:ignore="MissingConstraints"></com.google.android.gms.common.SignInButton>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>
