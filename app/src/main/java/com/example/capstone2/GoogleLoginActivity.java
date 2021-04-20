@@ -48,6 +48,7 @@ import com.google.android.gms.fitness.result.DataReadResponse;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -71,9 +72,10 @@ public class GoogleLoginActivity extends AppCompatActivity {
 
     int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 17;
 
-    public static DataSource dataSource;
 
-    public static final DataType dataType = DataType.TYPE_CALORIES_EXPENDED;
+    public static DataType dataType = DataType.TYPE_CALORIES_EXPENDED;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -136,7 +138,7 @@ public class GoogleLoginActivity extends AppCompatActivity {
         //TYPE_CALORIES_EXPENDED
         //Note: this total calories number includes BMR calories expended.
 
-        dataSource = new DataSource.Builder()
+        DataSource dataSource = new DataSource.Builder()
                 .setAppPackageName(this)
                 .setDataType(dataType)
                 .setStreamName("$TAG - kcal count")
@@ -144,30 +146,31 @@ public class GoogleLoginActivity extends AppCompatActivity {
                 .build();
 
 
+//
+//        c.add(c.MONTH, -3);
+//        long exer_endTime = c.getTimeInMillis();
+//        c.add(c.MINUTE, -2);
+//        long exer_startTime = c.getTimeInMillis();
+//
+//        DataPoint dataPoint =DataPoint.builder(dataSource)
+//                .setTimeInterval(exer_startTime, exer_endTime, MILLISECONDS)
+//                .setField(Field.FIELD_CALORIES, (float) 40.0)
+//                .build();
+//
+//        DataSet insert_dataSet = DataSet.builder(dataSource)
+//                .add(dataPoint).build();
+//
+//        Fitness.getHistoryClient(this, account).insertData(insert_dataSet)
+//                .addOnSuccessListener (unused ->
+//                    Log.i(TAG, "DataSet added successfully!"))
+//                .addOnFailureListener(e ->
+//                    Log.w(TAG, "There was an error adding the DataSet", e));
+//
 
-        c.add(c.MONTH, -4);
-        long exer_endTime = c.getTimeInMillis();
-        c.add(c.MINUTE, -2);
-        long exer_startTime = c.getTimeInMillis();
-
-        DataPoint dataPoint =DataPoint.builder(dataSource)
-                .setTimeInterval(exer_startTime, exer_endTime, MILLISECONDS)
-                .setField(Field.FIELD_CALORIES, (float) 20.0)
-                //.setField(Field.FIELD_STEPS, 950)
-                .build();
-
-        DataSet insert_dataSet = DataSet.builder(dataSource)
-                .add(dataPoint).build();
-
-        Fitness.getHistoryClient(this, account).insertData(insert_dataSet)
-                .addOnSuccessListener (unused ->
-                    Log.i(TAG, "DataSet added successfully!"))
-                .addOnFailureListener(e ->
-                    Log.w(TAG, "There was an error adding the DataSet", e));
 
 
 
-        //1년치 데이터를, 하루 단위로 끊어서 버킷에 담아서 가져오고 싶다는 쿼리
+
         DataReadRequest readRequest = new DataReadRequest.Builder()
                 .setTimeRange(startTime, endTime, MILLISECONDS)
                 .read(dataType)
@@ -175,6 +178,7 @@ public class GoogleLoginActivity extends AppCompatActivity {
                 //.bucketByTime(1, TimeUnit.DAYS)
                 .build();
 
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
         Fitness.getHistoryClient(this, account)
                 .readData(readRequest)
@@ -187,8 +191,8 @@ public class GoogleLoginActivity extends AppCompatActivity {
                             for (DataPoint dp : dataSet.getDataPoints()) {
                                 Log.i(TAG,"Data point:");
                                 Log.i(TAG,"\tType: "+ dp.getDataType().getName());
-                                Log.i(TAG,"\tStart: "+ dp.getStartTime(MILLISECONDS));
-                                Log.i(TAG,"\tEnd: "+ dp.getEndTime(MILLISECONDS));
+                                Log.i(TAG,"\tStart: "+  sdf.format(new Date(dp.getStartTime(MILLISECONDS))));
+                                Log.i(TAG,"\tEnd: "+  sdf.format(new Date(dp.getEndTime(MILLISECONDS))));
                                 for (Field field : dp.getDataType().getFields()) {
                                     Log.i(TAG,"\tField: "+ field.getName() + " Value: " + dp.getValue(field));
                                 }

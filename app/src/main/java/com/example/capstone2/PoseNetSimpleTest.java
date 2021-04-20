@@ -2,6 +2,7 @@ package com.example.capstone2;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.os.Bundle;
 
 import android.graphics.Bitmap;
@@ -9,20 +10,25 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
+
 import androidx.core.content.res.ResourcesCompat;
-import androidx.appcompat.app.AppCompatActivity;
+
 import android.widget.ImageView;
+
+import com.example.capstone2.model.CalorieEstimator;
+import com.example.capstone2.model.Exercise;
 
 import org.tensorflow.lite.examples.posenet.lib.KeyPoint;
 import org.tensorflow.lite.examples.posenet.lib.Person;
 import org.tensorflow.lite.examples.posenet.lib.Posenet;
 
+import static java.lang.Thread.sleep;
+
 public class PoseNetSimpleTest extends AppCompatActivity {
 
 
 
-    private Bitmap drawableToBitmap(Drawable drawable){
+    static Bitmap drawableToBitmap(Drawable drawable){
         Bitmap bitmap = Bitmap.createBitmap(257, 257, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
@@ -40,6 +46,7 @@ public class PoseNetSimpleTest extends AppCompatActivity {
 
         Drawable drawedImage = ResourcesCompat.getDrawable(super.getResources(), R.drawable.grace_hopper, null);
         Bitmap imageBitmap = drawableToBitmap(drawedImage);
+
         sampleImageView.setImageBitmap(imageBitmap);
         Posenet posenet = new Posenet(getApplicationContext());
 
@@ -60,6 +67,35 @@ public class PoseNetSimpleTest extends AppCompatActivity {
         }
         sampleImageView.setAdjustViewBounds(true);
         sampleImageView.setImageBitmap(mutableBitmap);
+
+
+        new Thread(new ImageMakingRunnable(this)).start();
+
+    }
+}
+
+
+class ImageMakingRunnable implements Runnable{
+    private CalorieEstimator calorieEstimator;
+    private Context context;
+
+    public ImageMakingRunnable(Context context){
+        this.context = context;
+        calorieEstimator = new CalorieEstimator(Exercise.SQURT, context);
+    }
+
+    @Override
+    public void run() {
+        try {
+            while(true) {
+                Drawable drawedImage = ResourcesCompat.getDrawable(context.getResources(), R.drawable.grace_hopper, null);
+                Bitmap imageBitmap = PoseNetSimpleTest.drawableToBitmap(drawedImage);
+                calorieEstimator.put(imageBitmap);
+                sleep(120);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 
