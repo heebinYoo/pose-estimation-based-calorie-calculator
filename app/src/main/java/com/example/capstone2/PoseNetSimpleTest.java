@@ -17,10 +17,14 @@ import android.widget.ImageView;
 
 import com.example.capstone2.model.CalorieEstimator;
 import com.example.capstone2.model.Exercise;
+import com.example.capstone2.model.util.TimestampedBitmap;
 
 import org.tensorflow.lite.examples.posenet.lib.KeyPoint;
 import org.tensorflow.lite.examples.posenet.lib.Person;
 import org.tensorflow.lite.examples.posenet.lib.Posenet;
+
+import java.util.Calendar;
+import java.util.Date;
 
 import static java.lang.Thread.sleep;
 
@@ -87,11 +91,12 @@ class ImageMakingRunnable implements Runnable{
     @Override
     public void run() {
         try {
+            long idx = 0;
             while(true) {
                 Drawable drawedImage = ResourcesCompat.getDrawable(context.getResources(), R.drawable.grace_hopper, null);
                 Bitmap imageBitmap = PoseNetSimpleTest.drawableToBitmap(drawedImage);
-                calorieEstimator.put(imageBitmap);
-                sleep(120);
+                calorieEstimator.put(new TimestampedBitmap(idx++, imageBitmap));
+                sleep(30);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
