@@ -63,7 +63,7 @@ class DTWTaskManager implements Runnable{
     @Override
     public void run() {
 
-        // 이 루프를 죽이고, 지금까지 나온 후보 dtw들을 어딘가에서 받아서 정리 - 칼로리화 해주는 방법을 마련해야 할 것
+        // TODO 이 루프를 죽이고, 지금까지 나온 후보 dtw들을 어딘가에서 받아서 정리 - 칼로리화 해주는 방법을 마련해야 할 것
         // dtw1번이랑 dtw2번이랑 1초 이상 곂치면 같은거로 일단 세버리는 전략
         while (true) {
 
@@ -100,7 +100,7 @@ class DTWTask {
     private double bestScore;
     private long bestTermindateTime;
 
-
+    // TODO csv 데이터 불러와서, dtw 수행하는 부분 실 구현하기
     public DTWTask(long startTimestamp) {
         this.startTimestamp = startTimestamp;
     }

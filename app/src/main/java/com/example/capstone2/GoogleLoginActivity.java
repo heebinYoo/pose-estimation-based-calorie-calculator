@@ -125,14 +125,14 @@ public class GoogleLoginActivity extends AppCompatActivity {
     // https://github.com/tutsplus/Android-GoogleFit-HistoryAPI/blob/master/app/src/main/java/com/tutsplus/googlefit/MainActivity.java
     private void accessGoogleFit() {
         Calendar c = Calendar.getInstance();
-        c.setTime(new Date());
-        long endTime = c.getTimeInMillis();
-        c.add(c.YEAR, -1);
-        long startTime = c.getTimeInMillis();
-        c.add(c.YEAR, 1);
+
 
         //이미 로그인 되어있으니까, 그냥 바로 땡겨쓰기.
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+
+        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .subscribe(DataType.TYPE_CALORIES_EXPENDED);
+
 
 
         //TYPE_CALORIES_EXPENDED
@@ -146,7 +146,7 @@ public class GoogleLoginActivity extends AppCompatActivity {
                 .build();
 
 
-//
+//        c.setTime(new Date());
 //        c.add(c.MONTH, -3);
 //        long exer_endTime = c.getTimeInMillis();
 //        c.add(c.MINUTE, -2);
@@ -165,9 +165,14 @@ public class GoogleLoginActivity extends AppCompatActivity {
 //                    Log.i(TAG, "DataSet added successfully!"))
 //                .addOnFailureListener(e ->
 //                    Log.w(TAG, "There was an error adding the DataSet", e));
-//
 
 
+
+
+        c.setTime(new Date());
+        long endTime = c.getTimeInMillis();
+        c.add(c.YEAR, -1);
+        long startTime = c.getTimeInMillis();
 
 
 
