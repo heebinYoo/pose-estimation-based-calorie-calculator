@@ -40,11 +40,11 @@
         android:id="@+id/textView3"
         android:layout_width="134dp"
         android:layout_height="45dp"
-        android:layout_marginStart="1dp"
+        android:layout_marginStart="42dp"
         android:layout_marginBottom="176dp"
         android:text="Time : "
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/surfaceView" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/deadlift"
@@ -69,21 +69,22 @@
         android:id="@+id/squat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="1dp"
+        android:layout_marginStart="42dp"
         android:text="squat"
         app:layout_constraintBaseline_toBaselineOf="@+id/deadlift"
-        app:layout_constraintStart_toStartOf="@+id/surfaceView" />
+        app:layout_constraintStart_toStartOf="parent" />
 
-    <SurfaceView
-        android:id="@+id/surfaceView"
+    <TextureView
+        android:id="@+id/texture"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="41dp"
-        android:layout_marginTop="28dp"
-        android:layout_marginEnd="41dp"
-        android:layout_marginBottom="20dp"
-        app:layout_constraintBottom_toTopOf="@+id/textView2"
+        android:layout_marginStart="44dp"
+        android:layout_marginTop="74dp"
+        android:layout_marginEnd="44dp"
+        android:layout_marginBottom="87dp"
+        app:layout_constraintBottom_toBottomOf="@+id/textView2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/plank" />
+        app:layout_constraintTop_toTopOf="@+id/plank" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

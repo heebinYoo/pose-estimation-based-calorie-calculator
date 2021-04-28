@@ -12,6 +12,8 @@ import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.DataType;
 
+import java.util.ArrayList;
+
 
 public class MainActivity extends AppCompatActivity {
     private Button toExercise;
@@ -23,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
 
         toExercise = findViewById(R.id.toExercise);
         toExercise.setOnClickListener(new View.OnClickListener() {
