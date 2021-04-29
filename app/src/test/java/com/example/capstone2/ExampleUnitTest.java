@@ -1,8 +1,11 @@
 package com.example.capstone2;
 
+import com.example.capstone2.model.util.TimestampedPerson;
+
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.concurrent.PriorityBlockingQueue;
 
 import static java.lang.Math.abs;
 import static org.junit.Assert.*;
@@ -16,6 +19,19 @@ public class ExampleUnitTest {
     @Test
     public void addition_isCorrect() {
         assertEquals(4, 2 + 2);
+    }
+    @Test
+    public void pbq_isCorrect() throws InterruptedException {
+        PriorityBlockingQueue<Integer> personQueue = new PriorityBlockingQueue<>(1024);
+        personQueue.put(1);
+        personQueue.put(9);
+        personQueue.put(2);
+        personQueue.put(4);
+        System.out.println(personQueue.take());
+        System.out.println(personQueue.take());
+        System.out.println(personQueue.take());
+        System.out.println(personQueue.take());
+
     }
 
     @Test
@@ -38,7 +54,7 @@ public class ExampleUnitTest {
                 }
             }
             else{
-                newRow[0] = matrix.get(i-1)[0] + d(sig1[0], current_input);
+                newRow[0] = matrix.get(matrix.size()-1)[0] + d(sig1[0], current_input);
                 for(int j=1; j<sig1.length; j++){
                     double num1 = newRow[j-1];
                     double num2 = matrix.get(i-1)[j];

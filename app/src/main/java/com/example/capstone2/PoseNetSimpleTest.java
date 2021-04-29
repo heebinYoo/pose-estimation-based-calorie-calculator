@@ -2,7 +2,11 @@ package com.example.capstone2;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.Manifest;
 import android.content.Context;
+import android.media.MediaMetadataRetriever;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 
 import android.graphics.Bitmap;
@@ -11,18 +15,23 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.res.ResourcesCompat;
 
+import android.os.Environment;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.example.capstone2.model.CalorieEstimator;
 import com.example.capstone2.model.Exercise;
+import com.example.capstone2.model.util.BitmapResizer;
 import com.example.capstone2.model.util.TimestampedBitmap;
 
 import org.tensorflow.lite.examples.posenet.lib.KeyPoint;
 import org.tensorflow.lite.examples.posenet.lib.Person;
 import org.tensorflow.lite.examples.posenet.lib.Posenet;
 
+import java.io.File;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -46,6 +55,10 @@ public class PoseNetSimpleTest extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pose_net_simple_test);
+
+        ActivityCompat.requestPermissions(PoseNetSimpleTest.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 10);
+
+
         ImageView sampleImageView = findViewById(R.id.image);
 
         Drawable drawedImage = ResourcesCompat.getDrawable(super.getResources(), R.drawable.grace_hopper, null);
@@ -90,17 +103,40 @@ class ImageMakingRunnable implements Runnable{
 
     @Override
     public void run() {
-        try {
+
+
+
+        //try {
             long idx = 0;
-            while(true) {
-                Drawable drawedImage = ResourcesCompat.getDrawable(context.getResources(), R.drawable.grace_hopper, null);
-                Bitmap imageBitmap = PoseNetSimpleTest.drawableToBitmap(drawedImage);
-                calorieEstimator.put(new TimestampedBitmap(idx++, imageBitmap));
-                sleep(30);
-            }
-        } catch (InterruptedException e) {
+            //while(true) {
+                //Drawable drawedImage = ResourcesCompat.getDrawable(context.getResources(), R.drawable.grace_hopper, null);
+                // Bitmap imageBitmap = PoseNetSimpleTest.drawableToBitmap(drawedImage);
+
+                File videoFile = new File(Environment.getExternalStorageDirectory().getPath()+ "/heebin.mp4");
+                Uri videoFileUri = Uri.parse(videoFile.toString());
+                MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+                retriever.setDataSource(videoFile.toString());
+                MediaPlayer mediaPlayer = MediaPlayer.create(context, videoFileUri);
+                int millisecond = mediaPlayer.getDuration();
+                for(int i = 0; i < millisecond; i+=33) {
+                    Bitmap bitmap = retriever.getFrameAtTime(i * 1000, MediaMetadataRetriever.OPTION_CLOSEST);
+                    bitmap = BitmapResizer.getResizedBitmap(bitmap, 257,257);
+
+                    calorieEstimator.put(new TimestampedBitmap(idx++, bitmap));
+                    Log.i("PoseNetSimpleTest", "past : "+i + " idx : " + idx );
+                }
+                retriever.release();
+
+
+                //sleep(30);
+            //}
+        //}
+        /*catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+         */
+        Log.i("PoseNetSimpleTest", "done");
     }
 
 

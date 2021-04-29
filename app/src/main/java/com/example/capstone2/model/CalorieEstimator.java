@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.example.capstone2.model.util.TimestampedBitmap;
 import com.example.capstone2.model.util.TimestampedPerson;
+import com.example.capstone2.model.util.dtw.DTWTaskManager;
 
 import org.tensorflow.lite.examples.posenet.lib.KeyPoint;
 import org.tensorflow.lite.examples.posenet.lib.Person;
@@ -25,7 +26,7 @@ public class CalorieEstimator {
     private Context context;
 
     private BlockingQueue<TimestampedBitmap> imageQueue = new ArrayBlockingQueue<TimestampedBitmap>(4096);
-    private PriorityBlockingQueue<TimestampedPerson> personQueue = new PriorityBlockingQueue<TimestampedPerson>(1024);
+    private PriorityBlockingQueue<TimestampedPerson> personQueue = new PriorityBlockingQueue<>(1024);
 
 
 
@@ -36,7 +37,7 @@ public class CalorieEstimator {
         for(int i=0; i<POSENET_THREAD; i++){
             new Thread(new PosenetRunnable(context, imageQueue, personQueue)).start();
         }
-        new Thread(new DTWTaskManager(personQueue)).start();
+        new Thread(new DTWTaskManager(personQueue, context)).start();
     }
 
     public void put(TimestampedBitmap image){
@@ -50,109 +51,7 @@ public class CalorieEstimator {
 }
 
 
-class DTWTaskManager implements Runnable{
-    private PriorityBlockingQueue<TimestampedPerson> personQueue;
-    private ArrayList<DTWTask> dtwTasks = new ArrayList<>();
-    private ArrayList<DTWTask> terminated = new ArrayList<>();
 
-    public DTWTaskManager(PriorityBlockingQueue<TimestampedPerson> personQueue){
-        this.personQueue = personQueue;
-    }
-
-
-    @Override
-    public void run() {
-
-        // TODO 이 루프를 죽이고, 지금까지 나온 후보 dtw들을 어딘가에서 받아서 정리 - 칼로리화 해주는 방법을 마련해야 할 것
-        // dtw1번이랑 dtw2번이랑 1초 이상 곂치면 같은거로 일단 세버리는 전략
-        while (true) {
-
-            try {
-                TimestampedPerson timestampedPerson = personQueue.take();
-
-                if (timestampedPerson.person.mark)
-                    dtwTasks.add(new DTWTask(timestampedPerson.timestamp));
-
-                Iterator<DTWTask> iter = dtwTasks.iterator();
-
-                while (iter.hasNext()) {
-                    DTWTask task = iter.next();
-                    if (!task.continueTask(timestampedPerson)) {
-                        terminated.add(task);
-                        iter.remove();
-                    }
-                }
-
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-}
-
-class DTWTask {
-    private static final int TERMINATE_THRESH_HOLD = 5;
-    private long startTimestamp;
-    private boolean terminated = false;
-    private ArrayList<timeAndScore> scores = new ArrayList<>();
-
-    private double bestScore;
-    private long bestTermindateTime;
-
-    // TODO csv 데이터 불러와서, dtw 수행하는 부분 실 구현하기
-    public DTWTask(long startTimestamp) {
-        this.startTimestamp = startTimestamp;
-    }
-
-    public double getScore(){
-        return bestScore;
-    }
-    public long getStart(){
-        return startTimestamp;
-    }
-    public long getTerm() {
-        return bestTermindateTime;
-    }
-
-    public boolean continueTask(TimestampedPerson timestampedPerson){
-        Person person = timestampedPerson.person;
-
-        if(terminated)
-            return false;
-
-        //calc DTW
-        if(person.mark){
-            scores.add(new timeAndScore(timestampedPerson.timestamp, 2.0));
-            if(scores.size() > TERMINATE_THRESH_HOLD){
-                terminated = true;
-                timeAndScore ts = Collections.max(scores);
-                bestScore = ts.score;
-                bestTermindateTime = ts.time;
-                return false;
-            }
-        }
-
-        return true;
-
-    }
-
-    class timeAndScore implements Comparable<timeAndScore>{
-        public double score;
-        public long time;
-
-        public timeAndScore( long time, double score) {
-            this.score = score;
-            this.time = time;
-        }
-
-        @Override
-        public int compareTo(timeAndScore o) {
-            return Double.compare(this.score, o.score);
-        }
-    }
-
-}
 
 
 class PosenetRunnable implements Runnable{
@@ -180,7 +79,8 @@ class PosenetRunnable implements Runnable{
                     target[i++] = (double) kp.position.y/257;
                 }
                 person.mark = StablePoseClassifier.forward(target);
-                personQueue.put(new TimestampedPerson(timestampedBitmap.timestamp, person));
+                TimestampedPerson timestampedPerson = new TimestampedPerson(timestampedBitmap.timestamp, person);
+                personQueue.put(timestampedPerson);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
