@@ -6,7 +6,6 @@ import org.tensorflow.lite.examples.posenet.lib.Person;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 
 import static java.lang.Math.abs;
 
@@ -17,9 +16,9 @@ class DTWTask {
     private long startTimestamp;
     private ArrayList<Person> GT;
     private boolean terminated = false;
-    private ArrayList<timeAndScore> scores = new ArrayList<>();
+    private ArrayList<timeAndScore> distance = new ArrayList<>();
 
-    private double bestScore;
+    private double bestDistance;
     private long bestTermindateTime;
 
     private ArrayList<double[]> matrix = new ArrayList<>();
@@ -31,7 +30,7 @@ class DTWTask {
     }
 
     public double getScore(){
-        return bestScore;
+        return bestDistance;
     }
     public long getStart(){
         return startTimestamp;
@@ -72,12 +71,12 @@ class DTWTask {
         // 첫번째로 입력을 처리한 때가 아니고, 만약 이번 프레임에서 정지자세가 검출되었으면 => 한 반복이 끝났을 거라고 판단
         // 스코어에 등록, 시작시간은 공통으로 등록되어있고, 끝나는 시간과 메트릭스 맨 아래, 오른쪽의 값을 정규화해서 저장
         if(matrix.size()!=1 && current_input.mark){
-            scores.add(new timeAndScore(timestampedPerson.timestamp, matrix.get(matrix.size()-1)[GT.size()-1] / (GT.size()+matrix.size()-1)));
+            distance.add(new timeAndScore(timestampedPerson.timestamp, matrix.get(matrix.size()-1)[GT.size()-1] / (GT.size()+matrix.size()-1)));
             //특정 번 이상 계산되었다면, 그때 thread 중지
-            if(scores.size() > TERMINATE_THRESH_HOLD){
+            if(distance.size() > TERMINATE_THRESH_HOLD){
                 terminated = true;
-                timeAndScore ts = Collections.max(scores);
-                bestScore = ts.score;
+                timeAndScore ts = Collections.max(distance);
+                bestDistance = ts.score;
                 bestTermindateTime = ts.time;
                 return false;
             }
@@ -85,6 +84,22 @@ class DTWTask {
         return true;
 
     }
+
+
+    public void terminate() {
+        terminated = true;
+        if(!distance.isEmpty()) {
+            timeAndScore ts = Collections.min(distance);
+            bestDistance = ts.score;
+            bestTermindateTime = ts.time;
+        }
+        else{
+            bestDistance = -1;
+            bestTermindateTime = startTimestamp;
+        }
+    }
+
+
     private double d(Person p1, Person p2) {
         double total = 0;
         for(int i=0; i<17; i++){

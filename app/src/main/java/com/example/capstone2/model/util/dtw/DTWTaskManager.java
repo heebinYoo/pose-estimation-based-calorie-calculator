@@ -21,6 +21,9 @@ public class DTWTaskManager implements Runnable{
 
     private PoseCsvHelper poseCsvHelper = null;
 
+
+    private boolean killSignal = false;
+
     public DTWTaskManager(PriorityBlockingQueue<TimestampedPerson> personQueue, Context context){
         this.personQueue = personQueue;
         try {
@@ -35,9 +38,9 @@ public class DTWTaskManager implements Runnable{
 
     @Override
     public void run() {
-        // TODO 이 루프를 죽이고, 지금까지 나온 후보 dtw들을 어딘가에서 받아서 정리 - 칼로리화 해주는 방법을 마련해야 할 것
-        // dtw 1번이랑 dtw 2번이랑 1초 이상 곂치면 같은거로 일단 세버리는 전략
         while (true) {
+            if(killSignal)
+                break;
 
             Log.i("DTWTaskManager", "dtwTasks : "+ dtwTasks.size() + " terminated :" + terminated.size());
 
@@ -62,5 +65,28 @@ public class DTWTaskManager implements Runnable{
                 e.printStackTrace();
             }
         }
+
+        finalizing();
+        Log.i("DTWTaskManager", "run: done");
+    }
+
+
+    private void finalizing(){
+        Iterator<DTWTask> iter = dtwTasks.iterator();
+        while (iter.hasNext()) {
+            DTWTask task = iter.next();
+            task.terminate();
+            terminated.add(task);
+            iter.remove();
+        }
+        // TODO 이 루프를 죽이고, 지금까지 나온 후보 dtw들을 어딘가에서 받아서 정리 - 칼로리화 해주는 방법을 마련해야 할 것
+        // dtw 1번이랑 dtw 2번이랑 1초 이상 곂치면 같은거로 일단 세버리는 전략
+
+        terminated.size();
+    }
+
+
+    public void stop() {
+        killSignal = true;
     }
 }

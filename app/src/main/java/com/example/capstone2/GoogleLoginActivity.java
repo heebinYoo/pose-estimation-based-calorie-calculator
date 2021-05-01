@@ -146,25 +146,25 @@ public class GoogleLoginActivity extends AppCompatActivity {
                 .build();
 
 
-//        c.setTime(new Date());
-//        c.add(c.MONTH, -3);
-//        long exer_endTime = c.getTimeInMillis();
-//        c.add(c.MINUTE, -2);
-//        long exer_startTime = c.getTimeInMillis();
-//
-//        DataPoint dataPoint =DataPoint.builder(dataSource)
-//                .setTimeInterval(exer_startTime, exer_endTime, MILLISECONDS)
-//                .setField(Field.FIELD_CALORIES, (float) 40.0)
-//                .build();
-//
-//        DataSet insert_dataSet = DataSet.builder(dataSource)
-//                .add(dataPoint).build();
-//
-//        Fitness.getHistoryClient(this, account).insertData(insert_dataSet)
-//                .addOnSuccessListener (unused ->
-//                    Log.i(TAG, "DataSet added successfully!"))
-//                .addOnFailureListener(e ->
-//                    Log.w(TAG, "There was an error adding the DataSet", e));
+        c.setTime(new Date());
+        c.add(c.MONTH, -3);
+        long exer_endTime = c.getTimeInMillis();
+        c.add(c.MINUTE, -2);
+        long exer_startTime = c.getTimeInMillis();
+
+        DataPoint dataPoint =DataPoint.builder(dataSource)
+                .setTimeInterval(exer_startTime, exer_endTime, MILLISECONDS)
+                .setField(Field.FIELD_CALORIES, (float) 40.0)
+                .build();
+
+        DataSet insert_dataSet = DataSet.builder(dataSource)
+                .add(dataPoint).build();
+
+        Fitness.getHistoryClient(this, account).insertData(insert_dataSet)
+                .addOnSuccessListener (unused ->
+                    Log.i(TAG, "DataSet added successfully!"))
+                .addOnFailureListener(e ->
+                    Log.w(TAG, "There was an error adding the DataSet", e));
 
 
 

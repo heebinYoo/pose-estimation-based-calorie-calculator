@@ -21,14 +21,13 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 public class CalorieEstimator {
     private static final int POSENET_THREAD = 4;
-
     private Exercise exercise;
     private Context context;
 
     private BlockingQueue<TimestampedBitmap> imageQueue = new ArrayBlockingQueue<TimestampedBitmap>(4096);
     private PriorityBlockingQueue<TimestampedPerson> personQueue = new PriorityBlockingQueue<>(1024);
 
-
+    private DTWTaskManager dtwTaskManager;
 
     public CalorieEstimator(Exercise exercise, Context context){
         this.exercise = exercise;
@@ -37,7 +36,8 @@ public class CalorieEstimator {
         for(int i=0; i<POSENET_THREAD; i++){
             new Thread(new PosenetRunnable(context, imageQueue, personQueue)).start();
         }
-        new Thread(new DTWTaskManager(personQueue, context)).start();
+        dtwTaskManager = new DTWTaskManager(personQueue, context);
+        new Thread(dtwTaskManager).start();
     }
 
     public void put(TimestampedBitmap image){
@@ -48,6 +48,10 @@ public class CalorieEstimator {
         }
     }
 
+    public void stop() {
+        dtwTaskManager.stop();
+
+    }
 }
 
 
@@ -72,6 +76,8 @@ class PosenetRunnable implements Runnable{
             try {
                 TimestampedBitmap timestampedBitmap = imageQueue.take();
                 Person person = posenet.estimateSinglePose(timestampedBitmap.bitmap);
+                ///재사용 금지!!!!!!!
+                timestampedBitmap.bitmap.recycle();
                 double[] target = new double[34];
                 int i = 0;
                 for (KeyPoint kp : person.keyPoints){

@@ -40,8 +40,7 @@ import static java.lang.Thread.sleep;
 public class PoseNetSimpleTest extends AppCompatActivity {
 
 
-
-    static Bitmap drawableToBitmap(Drawable drawable){
+    static Bitmap drawableToBitmap(Drawable drawable) {
         Bitmap bitmap = Bitmap.createBitmap(257, 257, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
@@ -52,7 +51,7 @@ public class PoseNetSimpleTest extends AppCompatActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState){
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pose_net_simple_test);
 
@@ -76,7 +75,7 @@ public class PoseNetSimpleTest extends AppCompatActivity {
 
         Bitmap mutableBitmap = imageBitmap.copy(Bitmap.Config.ARGB_8888, true);
         Canvas canvas = new Canvas(mutableBitmap);
-        for (KeyPoint keypoint : person.keyPoints){
+        for (KeyPoint keypoint : person.keyPoints) {
             canvas.drawCircle(
                     keypoint.position.x,
                     keypoint.position.y, size, paint
@@ -92,53 +91,48 @@ public class PoseNetSimpleTest extends AppCompatActivity {
 }
 
 
-class ImageMakingRunnable implements Runnable{
+class ImageMakingRunnable implements Runnable {
     private CalorieEstimator calorieEstimator;
-    private Context context;
+    private PoseNetSimpleTest context;
 
-    public ImageMakingRunnable(Context context){
+    public ImageMakingRunnable(PoseNetSimpleTest context) {
         this.context = context;
         calorieEstimator = new CalorieEstimator(Exercise.SQURT, context);
     }
 
     @Override
     public void run() {
+        long idx = 0;
+        File videoFile = new File(Environment.getExternalStorageDirectory().getPath() + "/heebin.mp4");
+        Uri videoFileUri = Uri.parse(videoFile.toString());
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(videoFile.toString());
+        MediaPlayer mediaPlayer = MediaPlayer.create(context, videoFileUri);
+        int millisecond = mediaPlayer.getDuration();
+        for (int i = 0; i < millisecond; i += 200) {
+            Bitmap bitmap = retriever.getFrameAtTime(i * 1000, MediaMetadataRetriever.OPTION_CLOSEST);
 
+            final Bitmap finalBitmap = bitmap.copy(bitmap.getConfig(), true);
+            context.runOnUiThread(new Runnable() {
+                ImageView sampleImageView = context.findViewById(R.id.image);
 
-
-        //try {
-            long idx = 0;
-            //while(true) {
-                //Drawable drawedImage = ResourcesCompat.getDrawable(context.getResources(), R.drawable.grace_hopper, null);
-                // Bitmap imageBitmap = PoseNetSimpleTest.drawableToBitmap(drawedImage);
-
-                File videoFile = new File(Environment.getExternalStorageDirectory().getPath()+ "/heebin.mp4");
-                Uri videoFileUri = Uri.parse(videoFile.toString());
-                MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-                retriever.setDataSource(videoFile.toString());
-                MediaPlayer mediaPlayer = MediaPlayer.create(context, videoFileUri);
-                int millisecond = mediaPlayer.getDuration();
-                for(int i = 0; i < millisecond; i+=33) {
-                    Bitmap bitmap = retriever.getFrameAtTime(i * 1000, MediaMetadataRetriever.OPTION_CLOSEST);
-                    bitmap = BitmapResizer.getResizedBitmap(bitmap, 257,257);
-
-                    calorieEstimator.put(new TimestampedBitmap(idx++, bitmap));
-                    Log.i("PoseNetSimpleTest", "past : "+i + " idx : " + idx );
+                @Override
+                public void run() {
+                    sampleImageView.setImageBitmap(finalBitmap);
                 }
-                retriever.release();
+            });
 
+            bitmap = BitmapResizer.getResizedBitmap(bitmap, 257, 257);
+            calorieEstimator.put(new TimestampedBitmap(idx++, bitmap));
 
-                //sleep(30);
-            //}
-        //}
-        /*catch (InterruptedException e) {
-            e.printStackTrace();
         }
 
-         */
+        calorieEstimator.stop();
+
+        retriever.release();
+
         Log.i("PoseNetSimpleTest", "done");
     }
-
 
 
 }
