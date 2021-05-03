@@ -1,5 +1,7 @@
 package com.example.capstone2.model;
 
+import android.util.Log;
+
 import static java.lang.Math.exp;
 
 public class StablePoseClassifier {
@@ -26,7 +28,6 @@ public class StablePoseClassifier {
         result = exp(result);
 
         result = result / (1+result);
-
 
         return result > 0.5;
     }

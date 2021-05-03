@@ -15,11 +15,16 @@ import java.util.Iterator;
 import java.util.concurrent.PriorityBlockingQueue;
 
 public class DTWTaskManager implements Runnable{
+    private final String TAG = "DTWTaskManager";
     private PriorityBlockingQueue<TimestampedPerson> personQueue;
     private ArrayList<DTWTask> dtwTasks = new ArrayList<>();
     private ArrayList<DTWTask> terminated = new ArrayList<>();
 
     private PoseCsvHelper poseCsvHelper = null;
+
+
+    private final long IGNORE_THRESHOLD = 1500;
+    private long lastDetctedTime;
 
 
     private boolean killSignal = false;
@@ -33,6 +38,9 @@ public class DTWTaskManager implements Runnable{
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        lastDetctedTime  = -IGNORE_THRESHOLD *2;
+
     }
 
 
@@ -42,13 +50,21 @@ public class DTWTaskManager implements Runnable{
             if(killSignal)
                 break;
 
-            Log.i("DTWTaskManager", "dtwTasks : "+ dtwTasks.size() + " terminated :" + terminated.size());
+            //Log.i(TAG, "dtwTasks : "+ dtwTasks.size() + " terminated :" + terminated.size());
 
             try {
                 TimestampedPerson timestampedPerson = personQueue.take();
 
-                if (timestampedPerson.person.mark)
-                    dtwTasks.add(new DTWTask(timestampedPerson.timestamp, this.poseCsvHelper.getPoseList()));
+                if(timestampedPerson.person.mark) {
+                    if(timestampedPerson.timestamp > 700 && IGNORE_THRESHOLD < timestampedPerson.timestamp - lastDetctedTime){
+                        Log.i(TAG, "run: detacted");
+                        dtwTasks.add(new DTWTask(timestampedPerson.timestamp, this.poseCsvHelper.getPoseList()));
+                    }
+                    lastDetctedTime = timestampedPerson.timestamp;
+                }
+
+
+
 
                 Iterator<DTWTask> iter = dtwTasks.iterator();
 
@@ -67,7 +83,7 @@ public class DTWTaskManager implements Runnable{
         }
 
         finalizing();
-        Log.i("DTWTaskManager", "run: done");
+        Log.i(TAG, "run: done");
     }
 
 
@@ -76,13 +92,26 @@ public class DTWTaskManager implements Runnable{
         while (iter.hasNext()) {
             DTWTask task = iter.next();
             task.terminate();
-            terminated.add(task);
+            if(task.getScore()!=-1 || task.getStart()!=task.getEnd())
+                terminated.add(task);
             iter.remove();
         }
         // TODO 이 루프를 죽이고, 지금까지 나온 후보 dtw들을 어딘가에서 받아서 정리 - 칼로리화 해주는 방법을 마련해야 할 것
         // dtw 1번이랑 dtw 2번이랑 1초 이상 곂치면 같은거로 일단 세버리는 전략
 
+
+        long workingTime = 0;
+        for (DTWTask t:terminated) {
+            Log.i(TAG, "finalizing: score : " +  t.getScore() +" start " + t.getStart() + " end " + t.getEnd() + " diff : " + (t.getEnd() - t.getStart()));
+            workingTime += t.getEnd() - t.getStart();
+        }
+
+
+
         terminated.size();
+
+
+
     }
 
 

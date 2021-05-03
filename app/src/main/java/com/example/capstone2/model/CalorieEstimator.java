@@ -14,9 +14,6 @@ import org.tensorflow.lite.examples.posenet.lib.KeyPoint;
 import org.tensorflow.lite.examples.posenet.lib.Person;
 import org.tensorflow.lite.examples.posenet.lib.Posenet;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -96,14 +93,17 @@ class PosenetRunnable implements Runnable{
                     target[i++] = (double) kp.position.x/257;
                     target[i++] = (double) kp.position.y/257;
                 }
+
                 person.mark = StablePoseClassifier.forward(target);
+
+
                 TimestampedPerson timestampedPerson = new TimestampedPerson(timestampedBitmap.timestamp, person);
                 personQueue.put(timestampedPerson);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
-            Log.i("CalorieEstimator", "imagequeue "+ this.imageQueue.size() + " personqueue "+this.personQueue.size());
+            //Log.i("CalorieEstimator", "imagequeue "+ this.imageQueue.size() + " personqueue "+this.personQueue.size());
         }
     }
 }
