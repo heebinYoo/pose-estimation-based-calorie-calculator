@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
 import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -102,28 +103,33 @@ class ImageMakingRunnable implements Runnable {
 
     @Override
     public void run() {
-        long idx = 0;
         File videoFile = new File(Environment.getExternalStorageDirectory().getPath() + "/heebin.mp4");
         Uri videoFileUri = Uri.parse(videoFile.toString());
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(videoFile.toString());
+
         MediaPlayer mediaPlayer = MediaPlayer.create(context, videoFileUri);
+        // the duration in milliseconds
         int millisecond = mediaPlayer.getDuration();
-        for (int i = 0; i < millisecond; i += 200) {
+
+        //30프레임 동영상을 넣었기 때문에 1000 / 30 = 33
+        for (int i = 0; i < millisecond; i += 33) {
+            // takes in microseconds (1/1000000th of a second) instead of milliseconds
+            //TODO : too slow : 300ms
             Bitmap bitmap = retriever.getFrameAtTime(i * 1000, MediaMetadataRetriever.OPTION_CLOSEST);
 
-            final Bitmap finalBitmap = bitmap.copy(bitmap.getConfig(), true);
             context.runOnUiThread(new Runnable() {
                 ImageView sampleImageView = context.findViewById(R.id.image);
 
                 @Override
                 public void run() {
-                    sampleImageView.setImageBitmap(finalBitmap);
+
+                    ((BitmapDrawable)sampleImageView.getDrawable()).getBitmap().recycle();
+                    sampleImageView.setImageBitmap(bitmap);
+
                 }
             });
-
-            bitmap = BitmapResizer.getResizedBitmap(bitmap, 257, 257);
-            calorieEstimator.put(new TimestampedBitmap(idx++, bitmap));
+            calorieEstimator.put(new TimestampedBitmap(i, bitmap.copy(bitmap.getConfig(), true)));
 
         }
 

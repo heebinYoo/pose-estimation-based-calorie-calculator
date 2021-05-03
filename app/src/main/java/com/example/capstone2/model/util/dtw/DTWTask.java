@@ -12,7 +12,7 @@ import static java.lang.Math.abs;
 public
 
 class DTWTask {
-    private static final int TERMINATE_THRESH_HOLD = 5;
+    private static final int TERMINATE_THRESH_HOLD = 30;
     private long startTimestamp;
     private ArrayList<Person> GT;
     private boolean terminated = false;

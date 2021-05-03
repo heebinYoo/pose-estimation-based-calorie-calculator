@@ -2,8 +2,10 @@ package com.example.capstone2.model;
 
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.util.Log;
 
+import com.example.capstone2.model.util.BitmapResizer;
 import com.example.capstone2.model.util.TimestampedBitmap;
 import com.example.capstone2.model.util.TimestampedPerson;
 import com.example.capstone2.model.util.dtw.DTWTaskManager;
@@ -40,6 +42,7 @@ public class CalorieEstimator {
         new Thread(dtwTaskManager).start();
     }
 
+    //give any size of bitmap, this class will handle it in thread, for speed reason
     public void put(TimestampedBitmap image){
         try {
             imageQueue.put(image);
@@ -75,7 +78,16 @@ class PosenetRunnable implements Runnable{
         while(true) {
             try {
                 TimestampedBitmap timestampedBitmap = imageQueue.take();
-                Person person = posenet.estimateSinglePose(timestampedBitmap.bitmap);
+
+//                long start, end; // 서버에서 가져오는 시간 측정
+//                start = System.currentTimeMillis();
+//                end = System.currentTimeMillis();
+//                Log.i("time", "run: " + (end - start));
+
+                Bitmap resizedBitmap = BitmapResizer.getResizedBitmap(timestampedBitmap.bitmap, 257, 257);
+
+
+                Person person = posenet.estimateSinglePose(resizedBitmap);
                 ///재사용 금지!!!!!!!
                 timestampedBitmap.bitmap.recycle();
                 double[] target = new double[34];
