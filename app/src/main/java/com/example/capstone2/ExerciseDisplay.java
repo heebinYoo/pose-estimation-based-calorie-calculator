@@ -57,7 +57,6 @@ public class ExerciseDisplay extends AppCompatActivity {
     private Button takePictureButton;
     private Button donePictureButton;
     private TextureView textureView;
-    private TextView textView;
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     static {
         ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -77,10 +76,12 @@ public class ExerciseDisplay extends AppCompatActivity {
     private boolean mFlashSupported;
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
-    private final Timer mTimer = new Timer();
-    private TimerTask mTimerTask;
-    private final int UPDATE = 1;
+    //타이머관련
+    TextView textView;
+    TimerTask timerTask;
+    Timer timer = new Timer();
     static int counter = 0;
+
 
 
     @Override
@@ -98,10 +99,7 @@ public class ExerciseDisplay extends AppCompatActivity {
         takePictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mTimerTask != null){
-                    mTimerTask = createTimerTask();
-                    mTimer.schedule(mTimerTask, 1000, 1000);
-                }
+                startTimerTask();
             }
         });
 
@@ -109,42 +107,44 @@ public class ExerciseDisplay extends AppCompatActivity {
         donePictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mTimerTask != null){
-                    mTimerTask.cancel();
-                }
+                stopTimerTask();
             }
         });
-
 
 
     }
 
     //타이머 부분
-    private final Handler mHandler = new Handler(Looper.getMainLooper()){
-        @Override
-        public void handleMessage(Message msg){
-            switch (msg.what){
-                case UPDATE:
-                    updateStatus();
-                    break;
-            }
-        }
-    };
+    protected void onDestroy(){
+        timer.cancel();
+        super.onDestroy();
+    }
 
-    private TimerTask createTimerTask(){
-        TimerTask timerTask = new TimerTask() {
+    private void startTimerTask(){
+        stopTimerTask();
+
+        timerTask = new TimerTask() {
             @Override
             public void run() {
                 counter++;
-                mHandler.sendEmptyMessage(UPDATE);
-                textView.setText("Timer: " + counter);
+                textView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        textView.setText("Time : " + counter +"s");
+                    }
+                });
+                takePicture();
             }
         };
-        return timerTask;
+        timer.schedule(timerTask, 0, 1000);
     }
 
-    private void updateStatus(){
-        Log.d("test", "update");
+    private void stopTimerTask(){
+        if(timerTask != null){
+            textView.setText("종료되었습니다.");
+            timerTask.cancel();
+            timerTask = null;
+        }
     }
     //타이머부분 끝
 
