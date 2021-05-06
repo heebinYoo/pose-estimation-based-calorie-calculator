@@ -3,7 +3,6 @@ package com.example.capstone2;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
-import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
@@ -25,7 +24,6 @@ import android.widget.ImageView;
 
 import com.example.capstone2.model.CalorieEstimator;
 import com.example.capstone2.model.Exercise;
-import com.example.capstone2.model.util.BitmapResizer;
 import com.example.capstone2.model.util.TimestampedBitmap;
 
 import org.tensorflow.lite.examples.posenet.lib.KeyPoint;
@@ -33,8 +31,6 @@ import org.tensorflow.lite.examples.posenet.lib.Person;
 import org.tensorflow.lite.examples.posenet.lib.Posenet;
 
 import java.io.File;
-import java.util.Calendar;
-import java.util.Date;
 
 import static java.lang.Thread.sleep;
 
@@ -94,11 +90,11 @@ public class PoseNetSimpleTest extends AppCompatActivity {
 
 class ImageMakingRunnable implements Runnable {
     private CalorieEstimator calorieEstimator;
-    private PoseNetSimpleTest context;
+    private AppCompatActivity activityContext;
 
-    public ImageMakingRunnable(PoseNetSimpleTest context) {
-        this.context = context;
-        calorieEstimator = new CalorieEstimator(Exercise.SQURT, context);
+    public ImageMakingRunnable(AppCompatActivity activityContext) {
+        this.activityContext = activityContext;
+        calorieEstimator = new CalorieEstimator(Exercise.SQURT, activityContext);
     }
 
     @Override
@@ -108,7 +104,7 @@ class ImageMakingRunnable implements Runnable {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(videoFile.toString());
 
-        MediaPlayer mediaPlayer = MediaPlayer.create(context, videoFileUri);
+        MediaPlayer mediaPlayer = MediaPlayer.create(activityContext, videoFileUri);
         // the duration in milliseconds
         int millisecond = mediaPlayer.getDuration();
 
@@ -118,8 +114,9 @@ class ImageMakingRunnable implements Runnable {
             //TODO : too slow : 300ms
             Bitmap bitmap = retriever.getFrameAtTime(i * 1000, MediaMetadataRetriever.OPTION_CLOSEST);
 
-            context.runOnUiThread(new Runnable() {
-                ImageView sampleImageView = context.findViewById(R.id.image);
+            //UI work
+            activityContext.runOnUiThread(new Runnable() {
+                ImageView sampleImageView = activityContext.findViewById(R.id.image);
 
                 @Override
                 public void run() {

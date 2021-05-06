@@ -1,8 +1,9 @@
 package com.example.capstone2.model.util.dtw;
 
-import android.content.Context;
-import android.net.Uri;
 import android.util.Log;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone2.R;
 import com.example.capstone2.model.util.TimestampedPerson;
@@ -22,24 +23,25 @@ public class DTWTaskManager implements Runnable{
 
     private PoseCsvHelper poseCsvHelper = null;
 
-
-    private final long IGNORE_THRESHOLD = 1500;
-    private long lastDetctedTime;
+    private AppCompatActivity activityContext;
+    private final long IGNORE_THRESHOLD = 700;
+    private long lastInitTime;
 
 
     private boolean killSignal = false;
 
-    public DTWTaskManager(PriorityBlockingQueue<TimestampedPerson> personQueue, Context context){
+    public DTWTaskManager(PriorityBlockingQueue<TimestampedPerson> personQueue, AppCompatActivity activityContext){
         this.personQueue = personQueue;
+        this.activityContext = activityContext;
         try {
-            InputStream inputStream =  context.getResources().openRawResource(R.raw.sample0);
+            InputStream inputStream =  activityContext.getResources().openRawResource(R.raw.sample0);
             InputStreamReader inputStreamReader =  new InputStreamReader(inputStream);
             this.poseCsvHelper = new PoseCsvHelper(inputStreamReader);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        lastDetctedTime  = -IGNORE_THRESHOLD *2;
+        lastInitTime = -IGNORE_THRESHOLD *2;
 
     }
 
@@ -50,21 +52,42 @@ public class DTWTaskManager implements Runnable{
             if(killSignal)
                 break;
 
+
+
             //Log.i(TAG, "dtwTasks : "+ dtwTasks.size() + " terminated :" + terminated.size());
 
             try {
                 TimestampedPerson timestampedPerson = personQueue.take();
 
-                if(timestampedPerson.person.mark) {
-                    if(timestampedPerson.timestamp > 700 && IGNORE_THRESHOLD < timestampedPerson.timestamp - lastDetctedTime){
-                        Log.i(TAG, "run: detacted");
-                        dtwTasks.add(new DTWTask(timestampedPerson.timestamp, this.poseCsvHelper.getPoseList()));
+
+                activityContext.runOnUiThread(new Runnable() {
+                    TextView textView = activityContext.findViewById(R.id.currentTimeText);
+                    @Override
+                    public void run() {
+                        textView.setText(" now : " + timestampedPerson.timestamp);
                     }
-                    lastDetctedTime = timestampedPerson.timestamp;
+                });
+
+
+                if(timestampedPerson.person.mark) {
+                    if(timestampedPerson.timestamp > 1000 && IGNORE_THRESHOLD < timestampedPerson.timestamp - lastInitTime){
+
+                        activityContext.runOnUiThread(new Runnable() {
+                            TextView textView = activityContext.findViewById(R.id.dtwinitText);
+                            @Override
+                            public void run() {
+                                textView.setText("new dtw initialized : " + timestampedPerson.timestamp);
+                            }
+                        });
+
+                        dtwTasks.add(new DTWTask(timestampedPerson.timestamp, this.poseCsvHelper.getPoseList()));
+                        lastInitTime = timestampedPerson.timestamp;
+                    }
+                    else{
+                        timestampedPerson.person.mark = false;
+                    }
+
                 }
-
-
-
 
                 Iterator<DTWTask> iter = dtwTasks.iterator();
 

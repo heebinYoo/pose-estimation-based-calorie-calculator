@@ -5,6 +5,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.capstone2.model.util.BitmapResizer;
 import com.example.capstone2.model.util.TimestampedBitmap;
 import com.example.capstone2.model.util.TimestampedPerson;
@@ -21,21 +23,21 @@ import java.util.concurrent.PriorityBlockingQueue;
 public class CalorieEstimator {
     private static final int POSENET_THREAD = 4;
     private Exercise exercise;
-    private Context context;
+    private AppCompatActivity activityContext;
 
     private BlockingQueue<TimestampedBitmap> imageQueue = new ArrayBlockingQueue<TimestampedBitmap>(4096);
     private PriorityBlockingQueue<TimestampedPerson> personQueue = new PriorityBlockingQueue<>(1024);
 
     private DTWTaskManager dtwTaskManager;
 
-    public CalorieEstimator(Exercise exercise, Context context){
+    public CalorieEstimator(Exercise exercise, AppCompatActivity activityContext){
         this.exercise = exercise;
-        this.context = context;
+        this.activityContext = activityContext;
 
         for(int i=0; i<POSENET_THREAD; i++){
-            new Thread(new PosenetRunnable(context, imageQueue, personQueue)).start();
+            new Thread(new PosenetRunnable(activityContext, imageQueue, personQueue)).start();
         }
-        dtwTaskManager = new DTWTaskManager(personQueue, context);
+        dtwTaskManager = new DTWTaskManager(personQueue, activityContext);
         new Thread(dtwTaskManager).start();
     }
 

@@ -14,7 +14,7 @@ public
 
 class DTWTask {
     private final String TAG = "DTWTask";
-    private static final int TERMINATE_THRESH_HOLD = 30;
+    private static final int TERMINATE_THRESH_HOLD = 20;
     private long startTimestamp;
     private ArrayList<NormalizedPerson> GT;
     private boolean terminated = false;
@@ -72,7 +72,7 @@ class DTWTask {
 
         // 첫번째로 입력을 처리한 때가 아니고, 만약 이번 프레임에서 정지자세가 검출되었으면 => 한 반복이 끝났을 거라고 판단
         // 스코어에 등록, 시작시간은 공통으로 등록되어있고, 끝나는 시간과 메트릭스 맨 아래, 오른쪽의 값을 정규화해서 저장
-        if(matrix.size()!=1 && current_input.mark){
+        if(matrix.size() > 1 && current_input.mark){
             distances.add(new timeAndScore(timestampedPerson.timestamp, matrix.get(matrix.size()-1)[GT.size()-1] / (GT.size()+matrix.size()-1)));
             //특정 번 이상 계산되었다면, 그때 thread 중지
             if(distances.size() > TERMINATE_THRESH_HOLD){
