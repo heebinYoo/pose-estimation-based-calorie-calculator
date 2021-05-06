@@ -21,6 +21,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
@@ -28,6 +30,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -40,15 +43,21 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class ExerciseDisplay extends AppCompatActivity {
+
     private static final String TAG = "AndroidCameraApi";
     private Button takePictureButton;
+    private Button donePictureButton;
     private TextureView textureView;
+    private TextView textView;
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     static {
         ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -68,22 +77,77 @@ public class ExerciseDisplay extends AppCompatActivity {
     private boolean mFlashSupported;
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
+    private final Timer mTimer = new Timer();
+    private TimerTask mTimerTask;
+    private final int UPDATE = 1;
+    static int counter = 0;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_exercise_display);
         textureView = (TextureView) findViewById(R.id.texture);
         assert textureView != null;
+        textView = (TextView) findViewById(R.id.textView3);
+
         textureView.setSurfaceTextureListener(textureListener);
+
         takePictureButton = (Button) findViewById(R.id.pauseButton);
         assert takePictureButton != null;
         takePictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                takePicture();
+                if (mTimerTask != null){
+                    mTimerTask = createTimerTask();
+                    mTimer.schedule(mTimerTask, 1000, 1000);
+                }
             }
         });
+
+        donePictureButton = (Button) findViewById(R.id.doneButton);
+        donePictureButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mTimerTask != null){
+                    mTimerTask.cancel();
+                }
+            }
+        });
+
+
+
     }
+
+    //타이머 부분
+    private final Handler mHandler = new Handler(Looper.getMainLooper()){
+        @Override
+        public void handleMessage(Message msg){
+            switch (msg.what){
+                case UPDATE:
+                    updateStatus();
+                    break;
+            }
+        }
+    };
+
+    private TimerTask createTimerTask(){
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                counter++;
+                mHandler.sendEmptyMessage(UPDATE);
+                textView.setText("Timer: " + counter);
+            }
+        };
+        return timerTask;
+    }
+
+    private void updateStatus(){
+        Log.d("test", "update");
+    }
+    //타이머부분 끝
+
     TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {

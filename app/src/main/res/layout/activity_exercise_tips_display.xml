@@ -5,34 +5,52 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".ExerciseTipsDisplay"
-    >
+    tools:context=".ExerciseTipsDisplay">
 
     <Button
         android:id="@+id/deadlift"
         android:layout_width="100dp"
         android:layout_height="50dp"
         android:layout_marginHorizontal="20dp"
-        tools:layout_editor_absoluteX="282dp"
-        tools:layout_editor_absoluteY="51dp" />
+        android:layout_marginTop="51dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="19dp"
+        app:layout_constraintBottom_toTopOf="@+id/container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/squat"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/squat"
         android:layout_width="100dp"
         android:layout_height="50dp"
-        tools:layout_editor_absoluteX="155dp"
-        tools:layout_editor_absoluteY="51dp" />
+        android:layout_marginStart="28dp"
+        android:layout_marginTop="51dp"
+        android:layout_marginEnd="162dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/plank"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
+        android:id="@+id/plank"
         android:layout_width="100dp"
         android:layout_height="50dp"
         android:layout_marginHorizontal="20dp"
-        tools:layout_editor_absoluteX="28dp"
-        tools:layout_editor_absoluteY="51dp" />
+        android:layout_marginTop="51dp"
+        android:layout_marginBottom="19dp"
+        app:layout_constraintBottom_toTopOf="@+id/container"
+        app:layout_constraintEnd_toStartOf="@+id/squat"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
+        android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="101dp" />
+        android:layout_marginTop="120dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/squat"
+        android:orientation="horizontal" />
 </androidx.constraintlayout.widget.ConstraintLayout>
