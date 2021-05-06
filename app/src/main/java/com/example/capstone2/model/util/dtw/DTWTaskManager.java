@@ -24,7 +24,7 @@ public class DTWTaskManager implements Runnable{
     private PoseCsvHelper poseCsvHelper = null;
 
     private AppCompatActivity activityContext;
-    private final long IGNORE_THRESHOLD = 700;
+    private final long IGNORE_THRESHOLD = 1500;
     private long lastInitTime;
 
 
@@ -34,7 +34,7 @@ public class DTWTaskManager implements Runnable{
         this.personQueue = personQueue;
         this.activityContext = activityContext;
         try {
-            InputStream inputStream =  activityContext.getResources().openRawResource(R.raw.sample0);
+            InputStream inputStream =  activityContext.getResources().openRawResource(R.raw.totaled);
             InputStreamReader inputStreamReader =  new InputStreamReader(inputStream);
             this.poseCsvHelper = new PoseCsvHelper(inputStreamReader);
         } catch (IOException e) {
