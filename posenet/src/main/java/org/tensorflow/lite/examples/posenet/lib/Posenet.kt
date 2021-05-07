@@ -92,7 +92,7 @@ class Posenet
   /** An Interpreter for the TFLite model.   */
   private var interpreter: Interpreter? = null
   private var gpuDelegate: GpuDelegate? = null
-  private val NUM_LITE_THREADS = 4
+  private val NUM_LITE_THREADS = 6
 
   private fun getInterpreter(): Interpreter {
     if (interpreter != null) {

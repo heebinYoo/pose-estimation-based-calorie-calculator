@@ -16,6 +16,8 @@ import org.tensorflow.lite.examples.posenet.lib.KeyPoint;
 import org.tensorflow.lite.examples.posenet.lib.Person;
 import org.tensorflow.lite.examples.posenet.lib.Posenet;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -28,6 +30,9 @@ public class CalorieEstimator {
     private BlockingQueue<TimestampedBitmap> imageQueue = new ArrayBlockingQueue<TimestampedBitmap>(4096);
     private PriorityBlockingQueue<TimestampedPerson> personQueue = new PriorityBlockingQueue<>(1024);
 
+    private ArrayList<PosenetRunnable> posenetRunnables = new ArrayList<>();
+
+
     private DTWTaskManager dtwTaskManager;
 
     public CalorieEstimator(Exercise exercise, AppCompatActivity activityContext){
@@ -35,7 +40,9 @@ public class CalorieEstimator {
         this.activityContext = activityContext;
 
         for(int i=0; i<POSENET_THREAD; i++){
-            new Thread(new PosenetRunnable(activityContext, imageQueue, personQueue)).start();
+            PosenetRunnable posenetRunnable =  new PosenetRunnable(activityContext, imageQueue, personQueue);
+            new Thread(posenetRunnable).start();
+            posenetRunnables.add(posenetRunnable);
         }
         dtwTaskManager = new DTWTaskManager(personQueue, activityContext);
         new Thread(dtwTaskManager).start();
@@ -50,9 +57,18 @@ public class CalorieEstimator {
         }
     }
 
-    public void stop() {
+    public WorkTimeAndCalorie stop() {
+        Iterator<PosenetRunnable> itr = posenetRunnables.iterator();
+        while(itr.hasNext()){
+            itr.next().stop();
+        }
         dtwTaskManager.stop();
+        WorkTimeAndCalorie workTimeAndCalorie = new WorkTimeAndCalorie();
 
+        workTimeAndCalorie.mills = dtwTaskManager.getWorkingTime();
+        // TODO : calculate that '10'
+        workTimeAndCalorie.calorie = 10;
+        return workTimeAndCalorie;
     }
 }
 
@@ -64,6 +80,7 @@ class PosenetRunnable implements Runnable{
     private Posenet posenet;
     private BlockingQueue<TimestampedBitmap> imageQueue;
     private PriorityBlockingQueue<TimestampedPerson> personQueue;
+    private boolean terminate = false;
 
 
     PosenetRunnable(Context context, BlockingQueue<TimestampedBitmap> imageQueue, PriorityBlockingQueue<TimestampedPerson> personQueue){
@@ -75,6 +92,9 @@ class PosenetRunnable implements Runnable{
     @Override
     public void run() {
         while(true) {
+            if (terminate)
+                break;
+
             try {
                 TimestampedBitmap timestampedBitmap = imageQueue.take();
 
@@ -107,5 +127,10 @@ class PosenetRunnable implements Runnable{
 
             //Log.i("CalorieEstimator", "imagequeue "+ this.imageQueue.size() + " personqueue "+this.personQueue.size());
         }
+    }
+
+    public void stop() {
+        this.terminate = true;
+
     }
 }

@@ -24,6 +24,7 @@ import android.widget.ImageView;
 
 import com.example.capstone2.model.CalorieEstimator;
 import com.example.capstone2.model.Exercise;
+import com.example.capstone2.model.WorkTimeAndCalorie;
 import com.example.capstone2.model.util.TimestampedBitmap;
 
 import org.tensorflow.lite.examples.posenet.lib.KeyPoint;
@@ -130,7 +131,7 @@ class ImageMakingRunnable implements Runnable {
 
         }
 
-        calorieEstimator.stop();
+        WorkTimeAndCalorie workTimeAndCalorie =  calorieEstimator.stop();
 
         retriever.release();
 

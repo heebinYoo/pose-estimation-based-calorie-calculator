@@ -26,9 +26,13 @@ public class DTWTaskManager implements Runnable{
     private AppCompatActivity activityContext;
     private final long IGNORE_THRESHOLD = 1500;
     private long lastInitTime;
-
+    private long workingTime = 0;
 
     private boolean killSignal = false;
+
+    public long getWorkingTime() {
+        return workingTime;
+    }
 
     public DTWTaskManager(PriorityBlockingQueue<TimestampedPerson> personQueue, AppCompatActivity activityContext){
         this.personQueue = personQueue;
@@ -123,7 +127,7 @@ public class DTWTaskManager implements Runnable{
         // dtw 1번이랑 dtw 2번이랑 1초 이상 곂치면 같은거로 일단 세버리는 전략
 
 
-        long workingTime = 0;
+
         for (DTWTask t:terminated) {
             Log.i(TAG, "finalizing: score : " +  t.getScore() +" start " + t.getStart() + " end " + t.getEnd() + " diff : " + (t.getEnd() - t.getStart()));
             workingTime += t.getEnd() - t.getStart();
