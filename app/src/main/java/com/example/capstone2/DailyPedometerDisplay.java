@@ -2,18 +2,26 @@ package com.example.capstone2;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import com.example.capstone2.database.dao.WorkTimeAndCalorieDao;
+import com.example.capstone2.database.database.WorkTimeAndCalorieDatabase;
+import com.example.capstone2.database.vo.WorkTimeAndCalorie;
+
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class DailyPedometerDisplay extends AppCompatActivity {
     ListView listView;
@@ -24,24 +32,33 @@ public class DailyPedometerDisplay extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_daily_pedometer_display);
-
-
-        ArrayList<ListData> list = new ArrayList<>();
-        list.add(new ListData(1,"제목1","내용", "내용"));
-        list.add(new ListData(1, "제목2", "내용", "내용"));
-        list.add(new ListData(1,"제목3", "내용", "내용"));
-        list.add(new ListData(1,"제목4","내용", "내용"));
-
         listView = findViewById(R.id.listview);
-        adapter = new listAdapter(list);
 
+
+        final AppCompatActivity activityContext = this;
+        WorkTimeAndCalorieDatabase db = WorkTimeAndCalorieDatabase.getInstance(this);
+        new Thread(() -> {
+            WorkTimeAndCalorieDao dao = db.workTimeAndCalorieDao();
+            AtomicReference<List<WorkTimeAndCalorie>> list = new AtomicReference<>();
+            list.set(dao.getAll());
+            activityContext.runOnUiThread(() -> setupView(list));
+        }).start();
+
+    }
+
+    private void setupView(AtomicReference<List<WorkTimeAndCalorie>> list){
+        adapter = new listAdapter(list.get());
         listView.setAdapter(adapter);
     }
 
-    class listAdapter extends BaseAdapter{
-        List<ListData> lists;
 
-        public listAdapter(List<ListData> lists) {
+
+
+
+    class listAdapter extends BaseAdapter{
+        List<WorkTimeAndCalorie> lists;
+
+        public listAdapter(List<WorkTimeAndCalorie> lists) {
             this.lists = lists;
         }
 
@@ -60,6 +77,7 @@ public class DailyPedometerDisplay extends AppCompatActivity {
             return position;
         }
 
+        @SuppressLint("DefaultLocale")
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View v = convertView;
@@ -69,21 +87,20 @@ public class DailyPedometerDisplay extends AppCompatActivity {
             }
 
             TextView tvTitle = v.findViewById(R.id.date);
-            TextView tvContent = v.findViewById(R.id.distance);
+            TextView tvContent = v.findViewById(R.id.worktime);
             TextView calorie = v.findViewById(R.id.calorie);
 
-            ListData data = lists.get(position);
+            WorkTimeAndCalorie data = lists.get(position);
 
-            tvTitle.setText(data.getTitle());
-            tvContent.setText(data.getContent());
-            calorie.setText(data.getContent());
+            SimpleDateFormat format1 = new SimpleDateFormat ( "yyyy-MM-dd HH:mm:ss");
 
-            if(data.getCategory() == 0){
-                tvTitle.setBackgroundColor(Color.WHITE);
+            tvTitle.setText(format1.format(data.datetime));
+            int sec = (int) (data.mills/1000);
+            tvContent.setText(String.format("%d분 %d초", sec/60, sec%60));
+            calorie.setText(String.format("%.2f 키로칼로리", data.calorie));
 
-            }else {
-                tvTitle.setBackgroundColor(Color.LTGRAY);
-            }
+            tvTitle.setBackgroundColor(Color.WHITE);
+
 
             return v;
         }

@@ -22,10 +22,14 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.ImageView;
 
+import com.example.capstone2.database.dao.WorkTimeAndCalorieDao;
+import com.example.capstone2.database.database.WorkTimeAndCalorieDatabase;
 import com.example.capstone2.model.CalorieEstimator;
 import com.example.capstone2.model.Exercise;
-import com.example.capstone2.model.WorkTimeAndCalorie;
+import com.example.capstone2.database.vo.WorkTimeAndCalorie;
 import com.example.capstone2.model.util.TimestampedBitmap;
+import com.example.capstone2.util.PreferenceKeys;
+import com.example.capstone2.util.PreferenceManager;
 
 import org.tensorflow.lite.examples.posenet.lib.KeyPoint;
 import org.tensorflow.lite.examples.posenet.lib.Person;
@@ -83,6 +87,19 @@ public class PoseNetSimpleTest extends AppCompatActivity {
         sampleImageView.setImageBitmap(mutableBitmap);
 
 
+        int weight = PreferenceManager.getInt(this, PreferenceKeys.weight);
+        if (weight == PreferenceManager.DEFAULT_VALUE_INT) {
+            PreferenceManager.setInt(this, PreferenceKeys.weight, 75);
+        }
+
+        int height = PreferenceManager.getInt(this, PreferenceKeys.height);
+        if (height == PreferenceManager.DEFAULT_VALUE_INT) {
+            PreferenceManager.setInt(this, PreferenceKeys.height, 175);
+        }
+
+
+
+
         new Thread(new ImageMakingRunnable(this)).start();
 
     }
@@ -100,7 +117,8 @@ class ImageMakingRunnable implements Runnable {
 
     @Override
     public void run() {
-        File videoFile = new File(Environment.getExternalStorageDirectory().getPath() + "/heebin.mp4");
+        //File videoFile = new File(Environment.getExternalStorageDirectory().getPath() + "/heebin.mp4");
+        File videoFile = new File(Environment.getExternalStorageDirectory().getPath() + "/shortheebin.mp4");
         Uri videoFileUri = Uri.parse(videoFile.toString());
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(videoFile.toString());
@@ -121,10 +139,8 @@ class ImageMakingRunnable implements Runnable {
 
                 @Override
                 public void run() {
-
                     ((BitmapDrawable)sampleImageView.getDrawable()).getBitmap().recycle();
                     sampleImageView.setImageBitmap(bitmap);
-
                 }
             });
             calorieEstimator.put(new TimestampedBitmap(i, bitmap.copy(bitmap.getConfig(), true)));
@@ -133,9 +149,21 @@ class ImageMakingRunnable implements Runnable {
 
         WorkTimeAndCalorie workTimeAndCalorie =  calorieEstimator.stop();
 
+        workTimeAndCalorie.datetime = System.currentTimeMillis();
+
+
+        WorkTimeAndCalorieDatabase db = WorkTimeAndCalorieDatabase.getInstance(activityContext);
+        new Thread(() -> {
+            WorkTimeAndCalorieDao dao = db.workTimeAndCalorieDao();
+            dao.insert(workTimeAndCalorie);
+        }).start();
+
+
+
+
         retriever.release();
 
-        Log.i("PoseNetSimpleTest", "done");
+        Log.i("PoseNetSimpleTest", "done kcal : " + workTimeAndCalorie.calorie + " time : " + workTimeAndCalorie.mills/(1000*60));
     }
 
 

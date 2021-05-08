@@ -30,6 +30,7 @@ public class DTWTaskManager implements Runnable{
 
     private boolean killSignal = false;
 
+
     public long getWorkingTime() {
         return workingTime;
     }
@@ -62,7 +63,8 @@ public class DTWTaskManager implements Runnable{
 
             try {
                 TimestampedPerson timestampedPerson = personQueue.take();
-
+                if(timestampedPerson.timestamp==-1)
+                    break;
 
                 activityContext.runOnUiThread(new Runnable() {
                     TextView textView = activityContext.findViewById(R.id.currentTimeText);
@@ -127,15 +129,12 @@ public class DTWTaskManager implements Runnable{
         // dtw 1번이랑 dtw 2번이랑 1초 이상 곂치면 같은거로 일단 세버리는 전략
 
 
-
         for (DTWTask t:terminated) {
             Log.i(TAG, "finalizing: score : " +  t.getScore() +" start " + t.getStart() + " end " + t.getEnd() + " diff : " + (t.getEnd() - t.getStart()));
-            workingTime += t.getEnd() - t.getStart();
+            //workingTime += t.getEnd() - t.getStart();
         }
 
-
-
-        terminated.size();
+        workingTime = terminated.get(terminated.size()-1).getEnd() - terminated.get(0).getStart();
 
 
 
@@ -144,5 +143,9 @@ public class DTWTaskManager implements Runnable{
 
     public void stop() {
         killSignal = true;
+        //블락큐에 걸려있는거 방지용.
+        for (int i = 0; i <5 ; i++) {
+            personQueue.add(new TimestampedPerson(-1,null));
+        }
     }
 }

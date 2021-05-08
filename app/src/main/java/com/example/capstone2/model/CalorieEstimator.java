@@ -3,14 +3,16 @@ package com.example.capstone2.model;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.capstone2.database.vo.WorkTimeAndCalorie;
 import com.example.capstone2.model.util.BitmapResizer;
 import com.example.capstone2.model.util.TimestampedBitmap;
 import com.example.capstone2.model.util.TimestampedPerson;
 import com.example.capstone2.model.util.dtw.DTWTaskManager;
+import com.example.capstone2.util.PreferenceKeys;
+import com.example.capstone2.util.PreferenceManager;
 
 import org.tensorflow.lite.examples.posenet.lib.KeyPoint;
 import org.tensorflow.lite.examples.posenet.lib.Person;
@@ -34,6 +36,7 @@ public class CalorieEstimator {
 
 
     private DTWTaskManager dtwTaskManager;
+    private Thread dtwTaskManagerThread;
 
     public CalorieEstimator(Exercise exercise, AppCompatActivity activityContext){
         this.exercise = exercise;
@@ -45,7 +48,8 @@ public class CalorieEstimator {
             posenetRunnables.add(posenetRunnable);
         }
         dtwTaskManager = new DTWTaskManager(personQueue, activityContext);
-        new Thread(dtwTaskManager).start();
+        dtwTaskManagerThread = new Thread(dtwTaskManager);
+        dtwTaskManagerThread.start();
     }
 
     //give any size of bitmap, this class will handle it in thread, for speed reason
@@ -63,11 +67,23 @@ public class CalorieEstimator {
             itr.next().stop();
         }
         dtwTaskManager.stop();
+        try {
+            dtwTaskManagerThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
         WorkTimeAndCalorie workTimeAndCalorie = new WorkTimeAndCalorie();
 
         workTimeAndCalorie.mills = dtwTaskManager.getWorkingTime();
-        // TODO : calculate that '10'
-        workTimeAndCalorie.calorie = 10;
+
+        int weight = PreferenceManager.getInt(activityContext, PreferenceKeys.weight);
+        if (weight == PreferenceManager.DEFAULT_VALUE_INT) {
+            //디폴트 체중이 65키로라고 생각함
+            weight = 65;
+        }
+        workTimeAndCalorie.calorie = 6 * weight * ((double) dtwTaskManager.getWorkingTime()/(1000*60*60));
         return workTimeAndCalorie;
     }
 }
