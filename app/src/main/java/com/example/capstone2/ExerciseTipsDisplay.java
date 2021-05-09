@@ -24,19 +24,19 @@ public class ExerciseTipsDisplay extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_exercise_tips_display);
-        btn_d = (Button)findViewById(R.id.deadlift);
+       // btn_d = (Button)findViewById(R.id.deadlift);
         btn_s = (Button)findViewById(R.id.squat);
-        btn_p = (Button)findViewById(R.id.plank);
+        //btn_p = (Button)findViewById(R.id.plank);
 
         container = (LinearLayout)findViewById(R.id.container);
 
-        btn_d.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                inflater.inflate(R.layout.youtube_d, container, true);
-            }
-        });
+//        btn_d.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//                inflater.inflate(R.layout.youtube_d, container, true);
+//            }
+//        });
 
         btn_s.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -46,12 +46,12 @@ public class ExerciseTipsDisplay extends AppCompatActivity {
             }
         });
 
-        btn_p.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                inflater.inflate(R.layout.youtube_d, container, true);
-            }
-        });
+//        btn_p.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//                inflater.inflate(R.layout.youtube_d, container, true);
+//            }
+//        });
     }
 }

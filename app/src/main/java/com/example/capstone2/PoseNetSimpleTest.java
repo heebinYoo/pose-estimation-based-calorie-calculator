@@ -117,8 +117,8 @@ class ImageMakingRunnable implements Runnable {
 
     @Override
     public void run() {
-        //File videoFile = new File(Environment.getExternalStorageDirectory().getPath() + "/heebin.mp4");
-        File videoFile = new File(Environment.getExternalStorageDirectory().getPath() + "/shortheebin.mp4");
+        File videoFile = new File(Environment.getExternalStorageDirectory().getPath() + "/heebin.mp4");
+        //File videoFile = new File(Environment.getExternalStorageDirectory().getPath() + "/shortheebin.mp4");
         Uri videoFileUri = Uri.parse(videoFile.toString());
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(videoFile.toString());

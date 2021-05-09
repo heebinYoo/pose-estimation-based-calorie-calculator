@@ -53,6 +53,7 @@ public class CalorieEstimator {
     }
 
     //give any size of bitmap, this class will handle it in thread, for speed reason
+    //put bitmap is automatically recyled
     public void put(TimestampedBitmap image){
         try {
             imageQueue.put(image);
@@ -132,7 +133,8 @@ class PosenetRunnable implements Runnable{
                     target[i++] = (double) kp.position.y/257;
                 }
 
-                person.mark = StablePoseClassifier.forward(target);
+                if(person.score>0.7)
+                    person.mark = StablePoseClassifier.forward(target);
 
 
                 TimestampedPerson timestampedPerson = new TimestampedPerson(timestampedBitmap.timestamp, person);

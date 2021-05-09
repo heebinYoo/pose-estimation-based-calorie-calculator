@@ -8,6 +8,6 @@
         android:id="@+id/you_tube_player_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:videoId="VIDEO_ID" />
+        app:videoId="8iHtZZOAfQU" />
 
 </LinearLayout>

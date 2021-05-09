@@ -5,6 +5,8 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.capstone2.ExerciseActivity;
+import com.example.capstone2.PoseNetSimpleTest;
 import com.example.capstone2.R;
 import com.example.capstone2.model.util.TimestampedPerson;
 
@@ -66,25 +68,53 @@ public class DTWTaskManager implements Runnable{
                 if(timestampedPerson.timestamp==-1)
                     break;
 
-                activityContext.runOnUiThread(new Runnable() {
-                    TextView textView = activityContext.findViewById(R.id.currentTimeText);
-                    @Override
-                    public void run() {
-                        textView.setText(" now : " + timestampedPerson.timestamp);
-                    }
-                });
 
+                //TODO for debug
+                if(activityContext instanceof PoseNetSimpleTest) {
+                    activityContext.runOnUiThread(new Runnable() {
+                        TextView textView = activityContext.findViewById(R.id.currentTimeText);
+
+                        @Override
+                        public void run() {
+                            textView.setText(" now : " + timestampedPerson.timestamp);
+                        }
+                    });
+                }
+                else if(activityContext instanceof ExerciseActivity){
+                    activityContext.runOnUiThread(new Runnable() {
+                        TextView textView = activityContext.findViewById(R.id.timeText);
+
+                        @Override
+                        public void run() {
+                            textView.setText(" now : " + timestampedPerson.timestamp);
+                        }
+                    });
+                }
 
                 if(timestampedPerson.person.mark) {
                     if(timestampedPerson.timestamp > 1000 && IGNORE_THRESHOLD < timestampedPerson.timestamp - lastInitTime){
 
-                        activityContext.runOnUiThread(new Runnable() {
-                            TextView textView = activityContext.findViewById(R.id.dtwinitText);
-                            @Override
-                            public void run() {
-                                textView.setText("new dtw initialized : " + timestampedPerson.timestamp);
-                            }
-                        });
+                        //TODO for debug
+                        if(activityContext instanceof PoseNetSimpleTest) {
+                            activityContext.runOnUiThread(new Runnable() {
+                                TextView textView = activityContext.findViewById(R.id.dtwinitText);
+
+                                @Override
+                                public void run() {
+                                    textView.setText("new dtw initialized : " + timestampedPerson.timestamp);
+                                }
+                            });
+                        }else if(activityContext instanceof ExerciseActivity){
+                            activityContext.runOnUiThread(new Runnable() {
+                                TextView textView = activityContext.findViewById(R.id.statusText);
+
+                                @Override
+                                public void run() {
+                                    textView.setText(" now : " + timestampedPerson.timestamp);
+                                }
+                            });
+                        }
+
 
                         dtwTasks.add(new DTWTask(timestampedPerson.timestamp, this.poseCsvHelper.getPoseList()));
                         lastInitTime = timestampedPerson.timestamp;
@@ -134,8 +164,10 @@ public class DTWTaskManager implements Runnable{
             //workingTime += t.getEnd() - t.getStart();
         }
 
-        workingTime = terminated.get(terminated.size()-1).getEnd() - terminated.get(0).getStart();
-
+        if(!terminated.isEmpty())
+            workingTime = terminated.get(terminated.size()-1).getEnd() - terminated.get(0).getStart();
+        else
+            workingTime = 0;
 
 
     }

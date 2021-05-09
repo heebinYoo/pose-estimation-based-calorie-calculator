@@ -12,7 +12,7 @@ import java.util.List;
 
 @Dao
 public interface WorkTimeAndCalorieDao {
-    @Query("SELECT * FROM worktimeandcalorie ORDER BY createddatetime ASC")
+    @Query("SELECT * FROM worktimeandcalorie ORDER BY createddatetime DESC")
     List<WorkTimeAndCalorie> getAll();
 
     @Insert

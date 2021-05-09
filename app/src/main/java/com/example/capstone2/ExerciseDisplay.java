@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -25,26 +26,24 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
 import android.view.TextureView;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.capstone2.database.dao.WorkTimeAndCalorieDao;
+import com.example.capstone2.database.database.WorkTimeAndCalorieDatabase;
+import com.example.capstone2.database.vo.WorkTimeAndCalorie;
 import com.example.capstone2.model.CalorieEstimator;
 import com.example.capstone2.model.Exercise;
 import com.example.capstone2.model.util.TimestampedBitmap;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,71 +56,78 @@ public class ExerciseDisplay extends AppCompatActivity {
 
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     private int REQUEST_CODE_PERMISSIONS = 1001;
-    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
+    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA"};
 
     //카메라 관련
     private String cameraId;
     private CameraDevice cameraDevice;
     private CameraCaptureSession cameraCaptureSession;
-    private CaptureRequest captureRequest;
+
     private CaptureRequest.Builder captureRequestBuilder;
 
     //이미지 저장 관련
-    private Size imageDimensions;
-    private ImageReader imageReader;
-    private File file;
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
 
     private TextureView textureView;
-    private Button button;
 
-    private CalorieEstimator calorieEstimator = new CalorieEstimator(Exercise.SQURT, this);
+    private CalorieEstimator calorieEstimator;
 
 
     //타이머관련
-    //여기는 오류 안남.
-    TextView textView;
+    TextView workingoutTimeTextView;
     TimerTask timerTask;
     Timer timer = new Timer();
-    static int counter = 0;
+    static long counter = 0;
 
     static {
-        ORIENTATIONS.append(Surface.ROTATION_0, 90);
-        ORIENTATIONS.append(Surface.ROTATION_90, 0);
+        ORIENTATIONS.append(Surface.ROTATION_0, 0);
+        ORIENTATIONS.append(Surface.ROTATION_90, 90);
         ORIENTATIONS.append(Surface.ROTATION_180, 270);
         ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }
 
-    //수정해야하지만 일단 보류
-   @Override
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_exercise_display);
 
         textureView = (TextureView) findViewById(R.id.texture);
         assert textureView != null;
-        textView = (TextView) findViewById(R.id.textView3);
         textureView.setSurfaceTextureListener(textureListener);
 
-        Button takePictureButton = (Button) findViewById(R.id.pauseButton);
-        assert takePictureButton != null;
-        takePictureButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startTimerTask();
-            }
+        workingoutTimeTextView = (TextView) findViewById(R.id.workingouttimetext);
+
+       Button exerciseStartButton = (Button) findViewById(R.id.start);
+        assert exerciseStartButton != null;
+        exerciseStartButton.setOnClickListener(v -> {
+            startTimerTask();
+            exerciseStartButton.setText("started");
+            exerciseStartButton.setEnabled(false);
         });
 
         Button donePictureButton = (Button) findViewById(R.id.doneButton);
-        donePictureButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                stopTimerTask();
-            }
-        });
+        donePictureButton.setOnClickListener(v ->
+                {
+                    stopTimerTask();
+                    WorkTimeAndCalorie workTimeAndCalorie =  calorieEstimator.stop();
+
+                    workTimeAndCalorie.datetime = System.currentTimeMillis();
 
 
+                    WorkTimeAndCalorieDatabase db = WorkTimeAndCalorieDatabase.getInstance(this);
+                    new Thread(() -> {
+                        WorkTimeAndCalorieDao dao = db.workTimeAndCalorieDao();
+                        dao.insert(workTimeAndCalorie);
+                    }).start();
+
+                    donePictureButton.setEnabled(false);
+
+
+                }
+        );
+
+        calorieEstimator = new CalorieEstimator(Exercise.SQURT, this);
     }
 
     //카메라 퍼미션 부분
@@ -130,7 +136,11 @@ public class ExerciseDisplay extends AppCompatActivity {
 
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
-                startCamera();
+                try {
+                    openCamera();
+                } catch (CameraAccessException e) {
+                    e.printStackTrace();
+                }
             } else {
                 Toast.makeText(this, "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
                 this.finish();
@@ -153,7 +163,10 @@ public class ExerciseDisplay extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        startBackgroundThread();
+
+        mBackgroundThread = new HandlerThread("Camera Background");
+        mBackgroundThread.start();
+        mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
 
         if (textureView.isAvailable()) {
             try {
@@ -170,45 +183,26 @@ public class ExerciseDisplay extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         try {
-            stopBackgroundThread();
+            mBackgroundThread.quitSafely();
+            mBackgroundThread.join();
+            mBackgroundThread = null;
+            mBackgroundHandler = null;
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
 
-    private void startBackgroundThread() {
-        mBackgroundThread = new HandlerThread("Camera Background");
-        mBackgroundThread.start();
-        mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
-    }
 
-    private void startCamera() {
-        textureView.setSurfaceTextureListener(textureListener);
 
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    takePicture();
-                } catch (CameraAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
 
     private void openCamera() throws CameraAccessException {
-        CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-
-        cameraId = manager.getCameraIdList()[0];
-        CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-
-        StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-
-        imageDimensions = map.getOutputSizes(SurfaceTexture.class)[0];
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+
+            cameraId = manager.getCameraIdList()[0];
+
             manager.openCamera(cameraId, stateCallback, null);
         } else {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
@@ -218,41 +212,21 @@ public class ExerciseDisplay extends AppCompatActivity {
 
     //카메라 캡쳐부분
 
-    //저장
-    private void save(Bitmap bitmap, long time) throws IOException {
-        //이건 외부저장소에 저장하는 방식이다.
-        /*
-        OutputStream outputStream = null;
 
-        outputStream = new FileOutputStream(file);
-        outputStream.write(bytes);
-        outputStream.close();
-         */
-        TimestampedBitmap timestampedBitmap = new TimestampedBitmap(time, bitmap);
-        calorieEstimator.put(timestampedBitmap);
-    }
 
     //캡쳐 실행
     private void takePicture() throws CameraAccessException {
         if(cameraDevice==null)
             return;
 
-        CameraManager manager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
 
-        CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
-        Size[] jpegSizes = null;
+        //넣어도 지 맘대로 나와서 뭐, 그냥 뒀는데, 무의미한 값임
+        int width = 257;
+        int height = 257;
 
-        jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
 
-        int width = 640;
-        int height = 480;
 
-        if(jpegSizes != null && jpegSizes.length>0){
-            width = jpegSizes[0].getWidth();
-            height = jpegSizes[0].getHeight();
-        }
-
-        ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
+        ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 2);
         List<Surface> outputSurfaces = new ArrayList<>(2);
         outputSurfaces.add(reader.getSurface());
 
@@ -265,40 +239,26 @@ public class ExerciseDisplay extends AppCompatActivity {
         int rotation = getWindowManager().getDefaultDisplay().getRotation();
         captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
 
-        Long tsLong = System.currentTimeMillis()/1000;
-        String ts = tsLong.toString();
-        Long timeStamp = System.currentTimeMillis();
-
-        //파일이름 지정
-        //file = new File(Environment.getExternalStorageDirectory() + "/"+ts+".jpg");
 
         //이미지리더
-        ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
-            @Override
-            public void onImageAvailable(ImageReader reader) {
-                Image image = null;
+        ImageReader.OnImageAvailableListener readerListener = reader1 -> {
+            Image image = reader1.acquireLatestImage();
 
-                image = reader.acquireLatestImage();
+            ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+            byte[] bytes = new byte[buffer.capacity()];
+            buffer.get(bytes);
+            //jpeg를 bitmap으로 변환해야함.
+            //BitmapFactory.decodeByteArray를 이용하여 Bitmap을 생성해준다.
+            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 
-                ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-                byte[] bytes = new byte[buffer.capacity()];
-                buffer.get(bytes);
-                //jpeg를 bitmap으로 변환해야함.
-                //BitmapFactory.decodeByteArray를 이용하여 Bitmap을 생성해준다.
-                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            Matrix rotateMatrix = new Matrix();
+            rotateMatrix.postRotate(90); //-360~360
+            Bitmap sideInversionImg = Bitmap.createBitmap(bitmap, 0, 0,
+                    bitmap.getWidth(), bitmap.getHeight(), rotateMatrix, false);
+            bitmap.recycle();
+            image.close();
 
-
-                //생성된 비트맵 이미지를 save를 통해 저장.
-                try {
-                    save(bitmap, timeStamp);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    if(image != null){
-                        image.close();
-                    }
-                }
-            }
+            calorieEstimator.put(new TimestampedBitmap(System.currentTimeMillis(), sideInversionImg));
         };
 
         reader.setOnImageAvailableListener(readerListener, mBackgroundHandler);
@@ -336,7 +296,6 @@ public class ExerciseDisplay extends AppCompatActivity {
 
     private void createCameraPreview() throws CameraAccessException {
         SurfaceTexture texture = textureView.getSurfaceTexture();
-        texture.setDefaultBufferSize(imageDimensions.getWidth(), imageDimensions.getHeight());
         Surface surface = new Surface(texture);
 
         captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
@@ -374,12 +333,6 @@ public class ExerciseDisplay extends AppCompatActivity {
 
     }
 
-    protected void stopBackgroundThread() throws InterruptedException {
-        mBackgroundThread.quitSafely();
-        mBackgroundThread.join();
-        mBackgroundThread = null;
-        mBackgroundHandler = null;
-    }
 
     // 리스너 콜백
     private TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
@@ -443,16 +396,15 @@ public class ExerciseDisplay extends AppCompatActivity {
     }
 
     private void startTimerTask(){
-        stopTimerTask();
 
         timerTask = new TimerTask() {
             @Override
             public void run() {
                 counter++;
-                textView.post(new Runnable() {
+                workingoutTimeTextView.post(new Runnable() {
                     @Override
                     public void run() {
-                        textView.setText("Time : " + counter +"s");
+                        workingoutTimeTextView.setText(String.format("Time : %ds", counter/30));
                     }
                 });
                 try {
@@ -462,12 +414,12 @@ public class ExerciseDisplay extends AppCompatActivity {
                 }
             }
         };
-        timer.schedule(timerTask, 0, 1000);
+        timer.schedule(timerTask, 0, 500);
     }
 
     private void stopTimerTask(){
         if(timerTask != null){
-            textView.setText("종료되었습니다.");
+            ((TextView)findViewById(R.id.calorietext)).setText("종료되었습니다.");
             timerTask.cancel();
             timerTask = null;
         }
