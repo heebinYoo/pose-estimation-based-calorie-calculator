@@ -217,7 +217,7 @@ public class ExerciseDisplay extends AppCompatActivity {
     //카메라 캡쳐부분
 
     //저장
-    private void save(byte[] bytes) throws IOException {
+    private void save(Bitmap bitmap, long time) throws IOException {
         //이건 외부저장소에 저장하는 방식이다.
         /*
         OutputStream outputStream = null;
@@ -226,7 +226,8 @@ public class ExerciseDisplay extends AppCompatActivity {
         outputStream.write(bytes);
         outputStream.close();
          */
-        calorieEstimator.put(bytes);
+        TimestampedBitmap timestampedBitmap = new TimestampedBitmap(time, bitmap);
+        calorieEstimator.put(timestampedBitmap);
     }
 
     //캡쳐 실행
@@ -264,9 +265,11 @@ public class ExerciseDisplay extends AppCompatActivity {
 
         Long tsLong = System.currentTimeMillis()/1000;
         String ts = tsLong.toString();
+        Long timeStamp = System.currentTimeMillis();
 
         //파일이름 지정
-        file = new File(Environment.getExternalStorageDirectory() + "/"+ts+".jpg");
+        //file = new File(Environment.getExternalStorageDirectory() + "/"+ts+".jpg");
+
         //이미지리더
         ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
             @Override
@@ -285,7 +288,7 @@ public class ExerciseDisplay extends AppCompatActivity {
 
                 //생성된 비트맵 이미지를 save를 통해 저장.
                 try {
-                    save(bytes);
+                    save(bitmap, timeStamp);
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
@@ -326,13 +329,6 @@ public class ExerciseDisplay extends AppCompatActivity {
             }
         }, mBackgroundHandler);
 
-    }
-
-    // 이미지 to 비트맵
-    private Bitmap imageToBitmap(Image image){
-
-        ByteBuffer buffer;
-        int rowStride;
     }
 
 
