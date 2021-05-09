@@ -38,6 +38,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.capstone2.model.CalorieEstimator;
+import com.example.capstone2.model.Exercise;
 import com.example.capstone2.model.util.TimestampedBitmap;
 
 import java.io.File;
@@ -75,7 +76,8 @@ public class ExerciseDisplay extends AppCompatActivity {
     private TextureView textureView;
     private Button button;
 
-    private CalorieEstimator calorieEstimator;
+    private CalorieEstimator calorieEstimator = new CalorieEstimator(Exercise.SQURT, this);
+
 
     //타이머관련
     //여기는 오류 안남.
