@@ -15,6 +15,10 @@ public interface WorkTimeAndCalorieDao {
     @Query("SELECT * FROM worktimeandcalorie ORDER BY createddatetime DESC")
     List<WorkTimeAndCalorie> getAll();
 
+    @Query("SELECT * FROM worktimeandcalorie WHERE createddatetime BETWEEN :startTime and :endTime ORDER BY createddatetime DESC")
+    List<WorkTimeAndCalorie> getWithTime(long startTime, long endTime);
+
+
     @Insert
     void insert(WorkTimeAndCalorie workTimeAndCalorie);
 

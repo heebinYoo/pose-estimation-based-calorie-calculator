@@ -110,7 +110,7 @@ public class DTWTaskManager implements Runnable{
 
                                 @Override
                                 public void run() {
-                                    textView.setText(" now : " + timestampedPerson.timestamp);
+                                    textView.setText(" new dtw initialized : " + timestampedPerson.timestamp);
                                 }
                             });
                         }

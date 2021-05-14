@@ -18,6 +18,7 @@ import org.tensorflow.lite.examples.posenet.lib.KeyPoint;
 import org.tensorflow.lite.examples.posenet.lib.Person;
 import org.tensorflow.lite.examples.posenet.lib.Posenet;
 
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -133,7 +134,7 @@ class PosenetRunnable implements Runnable{
                     target[i++] = (double) kp.position.y/257;
                 }
 
-                if(person.score>0.7)
+                //if(person.score>0.5)
                     person.mark = StablePoseClassifier.forward(target);
 
 

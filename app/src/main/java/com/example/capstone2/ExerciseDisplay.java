@@ -53,7 +53,7 @@ import java.util.TimerTask;
 
 
 public class ExerciseDisplay extends AppCompatActivity {
-
+/*
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     private int REQUEST_CODE_PERMISSIONS = 1001;
     private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA"};
@@ -426,6 +426,6 @@ public class ExerciseDisplay extends AppCompatActivity {
     }
     //타이머부분 끝
 
-
+*/
 }
 

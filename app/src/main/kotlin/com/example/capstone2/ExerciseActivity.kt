@@ -6,6 +6,9 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.graphics.*
 import android.media.Image
+import android.media.Ringtone
+import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -20,6 +23,7 @@ import com.example.capstone2.database.database.WorkTimeAndCalorieDatabase
 import com.example.capstone2.model.CalorieEstimator
 import com.example.capstone2.model.Exercise
 import com.example.capstone2.model.util.TimestampedBitmap
+import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -31,6 +35,12 @@ class ExerciseActivity : AppCompatActivity() {
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var imageAnalyzer: ImageAnalysis
     private lateinit var poseAnalyzer: PoseAnalyzer
+    private lateinit var timerTask: Timer
+    private var time : Int = 0
+
+    private final var BUZZER_TYPE_1 : Int = 1
+    private final var BUZZER_TYPE_2 : Int = 2
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,9 +59,26 @@ class ExerciseActivity : AppCompatActivity() {
         var startstopbtn = findViewById<Button>(R.id.startstop)
         startstopbtn.setOnClickListener {
             if(!startstopbtn.text.equals("stop")) {
-                startstopbtn.text = "stop"
-                poseAnalyzer =  PoseAnalyzer(this)
-                imageAnalyzer.setAnalyzer(cameraExecutor, poseAnalyzer)
+
+                var ac:AppCompatActivity = this
+                timerTask = kotlin.concurrent.timer(period = 1000) {
+                    time++
+
+                    if (time == 4) {
+                        runOnUiThread {
+                            buzzer(BUZZER_TYPE_2)
+                            timerTask.cancel()
+                            startstopbtn.text = "stop"
+                            poseAnalyzer = PoseAnalyzer(ac)
+                            imageAnalyzer.setAnalyzer(cameraExecutor, poseAnalyzer)
+                        }
+                    } else {
+                        runOnUiThread {
+                            buzzer(BUZZER_TYPE_1)
+                            startstopbtn.text = time.toString()
+                        }
+                    }
+                }
             }
             else {
                 startstopbtn.isEnabled = false
@@ -66,6 +93,30 @@ class ExerciseActivity : AppCompatActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
+    private fun buzzer(type:Int){
+        if(type==BUZZER_TYPE_1) {
+            try {
+                val path: Uri =
+                    Uri.parse("")
+                val r: Ringtone = RingtoneManager.getRingtone(this, path)
+                r.play()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        else if(type==BUZZER_TYPE_2){
+            try {
+                val path: Uri =
+                    RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
+                val r: Ringtone = RingtoneManager.getRingtone(this, path)
+                r.play()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
@@ -75,12 +126,14 @@ class ExerciseActivity : AppCompatActivity() {
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
             // Preview
-            val preview = Preview.Builder()
+            val preview:Preview = Preview.Builder()
                     .build()
                     .also {
                         var viewFinder = findViewById<PreviewView>(R.id.viewFinder)
                         it.setSurfaceProvider(viewFinder.createSurfaceProvider())
                     }
+
+
 
             imageAnalyzer = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -188,7 +241,7 @@ private class PoseAnalyzer(activityContext: AppCompatActivity) : ImageAnalysis.A
             rotateMatrix.postRotate(90f) //-360~360
 
             val sideInversionImg = Bitmap.createBitmap(bitmapBuffer!!, 0, 0,
-                    bitmapBuffer.width, bitmapBuffer.height, rotateMatrix, false)
+                    bitmapBuffer.width, bitmapBuffer.height, null, false)
 
 
             this.calorieEstimator!!.put(TimestampedBitmap(currentTimestamp, sideInversionImg!!.copy(sideInversionImg.config, true)))
