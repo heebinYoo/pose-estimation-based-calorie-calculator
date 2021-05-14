@@ -1,28 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
 
     <kr.co.prnd.YouTubePlayerView
-        android:id="@+id/you_tube_player_viewsquart"
+        android:id="@+id/you_tube_player_viewleg"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/videodiscriptionsquart"
+        app:layout_constraintBottom_toTopOf="@id/videodiscriptionleg"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:videoId="4z8-0iSnVsc" />
+        app:videoId="TmKc-jxcne8" />
 
     <TextView
-        android:id="@+id/videodiscriptionsquart"
+        android:id="@+id/videodiscriptionleg"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="스쿼트 운동은 차렷 자세로 시작해서 무릎을 굽혀 90도로 만든 후에 다시 일어나는 동작입니다."
-        app:layout_constraintTop_toBottomOf="@id/you_tube_player_viewsquart"
+        android:text="다리 들기 운동은 한쪽 다리를 위로 들었다가 내리는 운동입니다."
+        app:layout_constraintTop_toBottomOf="@id/you_tube_player_viewleg"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

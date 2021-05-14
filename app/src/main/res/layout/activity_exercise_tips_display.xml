@@ -15,7 +15,6 @@
         android:layout_marginTop="51dp"
         android:text="Squat"
 
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -30,4 +29,23 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/squat"
         android:orientation="horizontal" />
+
+    <Button
+        android:id="@+id/leg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="51dp"
+        android:text="leg"
+        app:layout_constraintEnd_toStartOf="@+id/arm"
+        app:layout_constraintStart_toEndOf="@+id/squat"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/arm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="51dp"
+        android:text="arm"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
