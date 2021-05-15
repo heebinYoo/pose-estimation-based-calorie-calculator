@@ -204,7 +204,7 @@ private class PoseAnalyzer(activityContext: AppCompatActivity) : ImageAnalysis.A
     private val db: WorkTimeAndCalorieDatabase
 
     init{
-        this.calorieEstimator = CalorieEstimator(Exercise.SQURT, activityContext)
+        this.calorieEstimator = CalorieEstimator(Exercise.LEG, activityContext)
         this.converter = YuvToRgbConverter(activityContext)
         this.db = WorkTimeAndCalorieDatabase.getInstance(activityContext)
     }

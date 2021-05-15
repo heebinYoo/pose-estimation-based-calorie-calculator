@@ -70,7 +70,7 @@ class Person {
   @kotlin.jvm.JvmField
   var score: Float = 0.0f
   @kotlin.jvm.JvmField
-  var mark: Boolean = false
+  var mark: Double = 0.0
 }
 
 enum class Device {

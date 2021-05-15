@@ -3,20 +3,23 @@ package com.example.capstone2.model;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone2.database.vo.WorkTimeAndCalorie;
+import com.example.capstone2.model.neuralCounter.NeuralCounterManager;
+import com.example.capstone2.model.neuralCounter.WorknetFactory;
 import com.example.capstone2.model.util.BitmapResizer;
 import com.example.capstone2.model.util.TimestampedBitmap;
 import com.example.capstone2.model.util.TimestampedPerson;
-import com.example.capstone2.model.util.dtw.DTWTaskManager;
+import com.example.capstone2.model.util.normalized.NormalizedPerson;
 import com.example.capstone2.util.PreferenceKeys;
 import com.example.capstone2.util.PreferenceManager;
 
-import org.tensorflow.lite.examples.posenet.lib.KeyPoint;
 import org.tensorflow.lite.examples.posenet.lib.Person;
 import org.tensorflow.lite.examples.posenet.lib.Posenet;
+import org.tensorflow.lite.examples.posenet.lib.Worknet;
 
 
 import java.util.ArrayList;
@@ -36,21 +39,28 @@ public class CalorieEstimator {
     private ArrayList<PosenetRunnable> posenetRunnables = new ArrayList<>();
 
 
-    private DTWTaskManager dtwTaskManager;
-    private Thread dtwTaskManagerThread;
+    private NeuralCounterManager neuralCounterManager;
+    private Thread neuralCounterThread;
+
+    private WorknetFactory worknetFactory;
 
     public CalorieEstimator(Exercise exercise, AppCompatActivity activityContext){
         this.exercise = exercise;
         this.activityContext = activityContext;
+        this.worknetFactory = new WorknetFactory();
 
         for(int i=0; i<POSENET_THREAD; i++){
-            PosenetRunnable posenetRunnable =  new PosenetRunnable(activityContext, imageQueue, personQueue);
+            PosenetRunnable posenetRunnable
+                    = new PosenetRunnable(activityContext,
+                    imageQueue,
+                    personQueue,
+                    worknetFactory.buildWorknet(exercise, activityContext));
             new Thread(posenetRunnable).start();
             posenetRunnables.add(posenetRunnable);
         }
-        dtwTaskManager = new DTWTaskManager(personQueue, activityContext);
-        dtwTaskManagerThread = new Thread(dtwTaskManager);
-        dtwTaskManagerThread.start();
+        neuralCounterManager = new NeuralCounterManager(personQueue, activityContext);
+        neuralCounterThread = new Thread(neuralCounterManager);
+        neuralCounterThread.start();
     }
 
     //give any size of bitmap, this class will handle it in thread, for speed reason
@@ -68,9 +78,9 @@ public class CalorieEstimator {
         while(itr.hasNext()){
             itr.next().stop();
         }
-        dtwTaskManager.stop();
+        neuralCounterManager.stop();
         try {
-            dtwTaskManagerThread.join();
+            neuralCounterThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -78,14 +88,14 @@ public class CalorieEstimator {
 
         WorkTimeAndCalorie workTimeAndCalorie = new WorkTimeAndCalorie();
 
-        workTimeAndCalorie.mills = dtwTaskManager.getWorkingTime();
+        workTimeAndCalorie.mills = neuralCounterManager.getWorkingTime();
 
         int weight = PreferenceManager.getInt(activityContext, PreferenceKeys.weight);
         if (weight == PreferenceManager.DEFAULT_VALUE_INT) {
             //디폴트 체중이 65키로라고 생각함
             weight = 65;
         }
-        workTimeAndCalorie.calorie = 6 * weight * ((double) dtwTaskManager.getWorkingTime()/(1000*60*60));
+        workTimeAndCalorie.calorie = 6 * weight * ((double) neuralCounterManager.getWorkingTime()/(1000*60*60));
         return workTimeAndCalorie;
     }
 }
@@ -99,12 +109,17 @@ class PosenetRunnable implements Runnable{
     private BlockingQueue<TimestampedBitmap> imageQueue;
     private PriorityBlockingQueue<TimestampedPerson> personQueue;
     private boolean terminate = false;
+    private Worknet worknet;
 
-
-    PosenetRunnable(Context context, BlockingQueue<TimestampedBitmap> imageQueue, PriorityBlockingQueue<TimestampedPerson> personQueue){
+    PosenetRunnable(Context context,
+                    BlockingQueue<TimestampedBitmap> imageQueue,
+                    PriorityBlockingQueue<TimestampedPerson> personQueue,
+                    Worknet worknet
+                    ){
         this.posenet = new Posenet(context);
         this.imageQueue = imageQueue;
         this.personQueue = personQueue;
+        this.worknet = worknet;
     }
 
     @Override
@@ -116,10 +131,6 @@ class PosenetRunnable implements Runnable{
             try {
                 TimestampedBitmap timestampedBitmap = imageQueue.take();
 
-//                long start, end; // 서버에서 가져오는 시간 측정
-//                start = System.currentTimeMillis();
-//                end = System.currentTimeMillis();
-//                Log.i("time", "run: " + (end - start));
 
                 Bitmap resizedBitmap = BitmapResizer.getResizedBitmap(timestampedBitmap.bitmap, 257, 257);
 
@@ -127,16 +138,9 @@ class PosenetRunnable implements Runnable{
                 Person person = posenet.estimateSinglePose(resizedBitmap);
                 ///재사용 금지!!!!!!!
                 timestampedBitmap.bitmap.recycle();
-                double[] target = new double[34];
-                int i = 0;
-                for (KeyPoint kp : person.keyPoints){
-                    target[i++] = (double) kp.position.x/257;
-                    target[i++] = (double) kp.position.y/257;
-                }
 
-                //if(person.score>0.5)
-                    person.mark = StablePoseClassifier.forward(target);
-
+                person.mark = worknet.estimateSinglePose(new NormalizedPerson(person).getFlattenKeyPointArray());
+                Log.i("hi", "run: " + person.mark);
 
                 TimestampedPerson timestampedPerson = new TimestampedPerson(timestampedBitmap.timestamp, person);
                 personQueue.put(timestampedPerson);

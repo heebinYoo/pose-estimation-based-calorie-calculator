@@ -86,7 +86,7 @@ public class PoseNetSimpleTest extends AppCompatActivity {
         sampleImageView.setAdjustViewBounds(true);
         sampleImageView.setImageBitmap(mutableBitmap);
 
-
+//TODO
         int weight = PreferenceManager.getInt(this, PreferenceKeys.weight);
         if (weight == PreferenceManager.DEFAULT_VALUE_INT) {
             PreferenceManager.setInt(this, PreferenceKeys.weight, 75);
@@ -112,13 +112,14 @@ class ImageMakingRunnable implements Runnable {
 
     public ImageMakingRunnable(AppCompatActivity activityContext) {
         this.activityContext = activityContext;
-        calorieEstimator = new CalorieEstimator(Exercise.SQURT, activityContext);
+        calorieEstimator = new CalorieEstimator(Exercise.LEG, activityContext);
     }
 
     @Override
     public void run() {
-        File videoFile = new File(Environment.getExternalStorageDirectory().getPath() + "/heebin.mp4");
+        //File videoFile = new File(Environment.getExternalStorageDirectory().getPath() + "/heebin.mp4");
         //File videoFile = new File(Environment.getExternalStorageDirectory().getPath() + "/shortheebin.mp4");
+        File videoFile = new File(Environment.getExternalStorageDirectory().getPath() + "/legwork.MOV");
         Uri videoFileUri = Uri.parse(videoFile.toString());
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(videoFile.toString());
@@ -132,6 +133,10 @@ class ImageMakingRunnable implements Runnable {
             // takes in microseconds (1/1000000th of a second) instead of milliseconds
             //TODO : too slow : 300ms
             Bitmap bitmap = retriever.getFrameAtTime(i * 1000, MediaMetadataRetriever.OPTION_CLOSEST);
+            if(bitmap==null){
+                continue;
+            }
+            calorieEstimator.put(new TimestampedBitmap(i, bitmap.copy(bitmap.getConfig(), true)));
 
             //UI work
             activityContext.runOnUiThread(new Runnable() {
@@ -143,7 +148,7 @@ class ImageMakingRunnable implements Runnable {
                     sampleImageView.setImageBitmap(bitmap);
                 }
             });
-            calorieEstimator.put(new TimestampedBitmap(i, bitmap.copy(bitmap.getConfig(), true)));
+
 
         }
 
