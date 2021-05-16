@@ -34,6 +34,8 @@ public class NeuralCounterManager  implements Runnable{
     private double mean_time_of_down_duration = -1;
 
 
+    private long startTime=0;
+
 
     public NeuralCounterManager(PriorityBlockingQueue<TimestampedPerson> personQueue, AppCompatActivity activityContext){
         this.personQueue = personQueue;
@@ -88,6 +90,7 @@ public class NeuralCounterManager  implements Runnable{
 
             if(state==0){ //초기상태 (앉아있다고 가정)
                 if(filteredScored > UP_PROB_THRESHOLD){//서있는게 초기에 감지
+                    startTime = timestampedPerson.timestamp;
                     last_up = timestampedPerson.timestamp;
                     state=1;
                 }
@@ -118,6 +121,8 @@ public class NeuralCounterManager  implements Runnable{
                         last_up = timestampedPerson.timestamp;
                         state = 1;
                         count += 1;
+                        Log.i(TAG, "run: count++ : " + count);
+
                     }
                 }
             }
@@ -128,12 +133,6 @@ public class NeuralCounterManager  implements Runnable{
             for (int i = 0; i < LAST_NEAR_ARRAY_ELT; i++) {
                 nearArray[i] = nearArray[i+1];
             }
-
-
-
-
-
-
 
                 //TODO for debug
                 if(activityContext instanceof PoseNetSimpleTest) {
@@ -174,6 +173,7 @@ public class NeuralCounterManager  implements Runnable{
         for (int i = 0; i <5 ; i++) {
             personQueue.add(new TimestampedPerson(-1,null));
         }
+        workingTime = last_up - startTime;
     }
 
     public long getWorkingTime() {

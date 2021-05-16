@@ -13,15 +13,14 @@ public class NormalizedPerson {
 
     public List<NormalizedKeyPoint> normalizedKeyPoints = new ArrayList<>();
 
-    private Person person;
 
     public float[][] getFlattenKeyPointArray(){
         float[][] array = new float[34][1];
         for (int i = 0; i < 17; i++) {
             array[2*i] = new float[1];
-            array[2*i][0] = (float) person.keyPoints.get(i).position.x;
+            array[2*i][0] = (float) normalizedKeyPoints.get(i).normPosition.x;
             array[2*i + 1] = new float[1];
-            array[2*i + 1][0] = (float) person.keyPoints.get(i).position.y;
+            array[2*i + 1][0] = (float) normalizedKeyPoints.get(i).normPosition.y;
         }
 
         return array;
@@ -34,28 +33,27 @@ public class NormalizedPerson {
     private double distance(NormalizedPosition p1, NormalizedPosition p2){
         return sqrt((p1.x-p2.x) * (p1.x-p2.x) + (p1.y-p2.y) * (p1.y-p2.y));
     }
-    public double getPoseScale(Person person){
-        this.person = person;
+    public double getPoseScale(){
 
-        double sholder_middleX = person.keyPoints.get(BodyPart.RIGHT_SHOULDER.ordinal()).position.x
-                + person.keyPoints.get(BodyPart.LEFT_SHOULDER.ordinal()).position.x;
-        double sholder_middleY = person.keyPoints.get(BodyPart.RIGHT_SHOULDER.ordinal()).position.y
-                + person.keyPoints.get(BodyPart.LEFT_SHOULDER.ordinal()).position.y;
+        double sholder_middleX = (normalizedKeyPoints.get(BodyPart.RIGHT_SHOULDER.ordinal()).normPosition.x
+                + normalizedKeyPoints.get(BodyPart.LEFT_SHOULDER.ordinal()).normPosition.x)/2.0;
+        double sholder_middleY = (normalizedKeyPoints.get(BodyPart.RIGHT_SHOULDER.ordinal()).normPosition.y
+                + normalizedKeyPoints.get(BodyPart.LEFT_SHOULDER.ordinal()).normPosition.y)/2.0;
         NormalizedPosition sholder_middle = new NormalizedPosition();
         sholder_middle.x = sholder_middleX;
         sholder_middle.y = sholder_middleY;
 
-        KeyPoint kp_left_hip =  person.keyPoints.get(BodyPart.LEFT_HIP.ordinal());
-        KeyPoint kp_right_hip = person.keyPoints.get(BodyPart.RIGHT_HIP.ordinal());
-        double hip_middleX = (kp_left_hip.position.x + kp_right_hip.position.x)/2.0;
-        double hip_middleY = (kp_left_hip.position.x + kp_right_hip.position.x)/2.0;
+        NormalizedKeyPoint kp_left_hip =  normalizedKeyPoints.get(BodyPart.LEFT_HIP.ordinal());
+        NormalizedKeyPoint kp_right_hip = normalizedKeyPoints.get(BodyPart.RIGHT_HIP.ordinal());
+        double hip_middleX = (kp_left_hip.normPosition.x + kp_right_hip.normPosition.x)/2.0;
+        double hip_middleY = (kp_left_hip.normPosition.x + kp_right_hip.normPosition.x)/2.0;
         NormalizedPosition hip_middle = new NormalizedPosition();
         hip_middle.x = hip_middleX;
         hip_middle.y = hip_middleY;
 
-        double max = distance(sholder_middle, hip_middle);
-        for(KeyPoint kp : person.keyPoints){
-            double now = distance(hip_middle, new NormalizedPosition(kp.position.x, kp.position.y));
+        double max = distance(sholder_middle, hip_middle) * 2.5;
+        for(NormalizedKeyPoint kp : normalizedKeyPoints){
+            double now = distance(hip_middle, new NormalizedPosition(kp.normPosition.x, kp.normPosition.y));
             if(max < now){
                 max = now;
             }
@@ -64,21 +62,26 @@ public class NormalizedPerson {
     }
 
 
-    //TODO
     public NormalizedPerson(Person person){
         KeyPoint kp_left_hip =  person.keyPoints.get(BodyPart.LEFT_HIP.ordinal());
         KeyPoint kp_right_hip = person.keyPoints.get(BodyPart.RIGHT_HIP.ordinal());
         double centerX = (kp_left_hip.position.x + kp_right_hip.position.x)/2.0;
-        double centerY = (kp_left_hip.position.x + kp_right_hip.position.x)/2.0;
-        double normFactor = getPoseScale(person);
+        double centerY = (kp_left_hip.position.y + kp_right_hip.position.y)/2.0;
+
         for(KeyPoint kp : person.keyPoints){
             NormalizedKeyPoint nkp = new NormalizedKeyPoint();
             nkp.bodyPart = kp.bodyPart;
-            nkp.normPosition.x = (kp.position.x - centerX)/normFactor;
-            nkp.normPosition.y = (kp.position.y - centerY)/normFactor;
+            nkp.normPosition.x = (kp.position.x - centerX);
+            nkp.normPosition.y = (kp.position.y - centerY);
             normalizedKeyPoints.add(nkp);
-
         }
+
+        double normFactor = getPoseScale();
+        for(NormalizedKeyPoint nkp : normalizedKeyPoints) {
+            nkp.normPosition.x/=normFactor;
+            nkp.normPosition.y/=normFactor;
+        }
+
     }
 
 
