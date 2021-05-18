@@ -3,4 +3,15 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="take_picture">Take picture</string>
+
+    <string name="next">다음</string>
+    <string name="skip">건너띄기</string>
+    <string name="start">시작</string>
+
+    <string-array name="LAN">
+        <item>"다리운동"</item>
+        <item>"팔운동"</item>
+        <item>"스쿼트"</item>
+    </string-array>
+
 </resources>

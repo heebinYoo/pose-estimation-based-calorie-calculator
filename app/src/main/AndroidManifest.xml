@@ -21,7 +21,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Capstone2">
-        <activity android:name=".ExerciseActivity"></activity>
+        <activity android:name=".TutorialActivity"></activity>
+        <activity android:name=".SetExercise" />
+        <activity android:name=".ExerciseActivity" />
         <activity
             android:name=".GoogleLoginActivity"
             android:exported="true" />
