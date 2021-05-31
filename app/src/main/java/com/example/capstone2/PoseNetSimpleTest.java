@@ -168,7 +168,7 @@ class ImageMakingRunnable implements Runnable {
 
         retriever.release();
 
-        Log.i("PoseNetSimpleTest", "done kcal : " + workTimeAndCalorie.calorie + " time : " + workTimeAndCalorie.mills/(1000*60));
+        Log.i("PoseNetSimpleTest", "done kcal : " + workTimeAndCalorie.calorie + " second : " + workTimeAndCalorie.mills/(1000));
     }
 
 

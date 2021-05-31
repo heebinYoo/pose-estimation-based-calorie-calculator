@@ -30,8 +30,8 @@ public class NeuralCounterManager  implements Runnable{
     private int state=0;
     private long last_up = 0;
     private long last_down = 0;
-    private double mean_time_of_up_duration = -1;
-    private double mean_time_of_down_duration = -1;
+    private double mean_time_of_upping = -1;
+    private double mean_time_of_downing = -1;
 
 
     private long startTime=0;
@@ -44,6 +44,8 @@ public class NeuralCounterManager  implements Runnable{
 
     @Override
     public void run() {
+
+
         for (int i = 0; i < LAST_NEAR_ARRAY_ELT; i++) {
             TimestampedPerson timestampedPerson;
             try {
@@ -53,6 +55,9 @@ public class NeuralCounterManager  implements Runnable{
             }
             nearArray[i] = timestampedPerson;
         }
+
+
+
 
         while (true) {
             if(killSignal)
@@ -67,7 +72,7 @@ public class NeuralCounterManager  implements Runnable{
             }
 
 
-            nearArray[LAST_NEAR_ARRAY_ELT] = timestampedPerson;
+            nearArray[nearArray.length-1] = timestampedPerson;
 
             //필터링 투표
             int upCount = 0, downCount = 0;
@@ -80,12 +85,14 @@ public class NeuralCounterManager  implements Runnable{
 
             //필터링 값 결정
             double filteredScored;
-            if (upCount > 4)
+            if (upCount >= 4)
                 filteredScored = 1;
-            else if (downCount > 4)
+            else if (downCount >= 4)
                 filteredScored = 0;
             else
-                filteredScored = nearArray[3].person.mark;
+                filteredScored = 0.5;
+
+            Log.i("hi", String.format("run: filtered : %.3f, orig : %.3f", filteredScored, nearArray[3].person.mark));
 
 
             if(state==0){ //초기상태 (앉아있다고 가정)
@@ -93,37 +100,46 @@ public class NeuralCounterManager  implements Runnable{
                     startTime = timestampedPerson.timestamp;
                     last_up = timestampedPerson.timestamp;
                     state=1;
+                    Log.i(TAG, "run: 0 -> 1");
                 }
             }
             else if(state==1){ //서있음
                 if(filteredScored < DOWN_PROB_THRESHOLD){
-                    long duration = timestampedPerson.timestamp - last_down;
-                    if(mean_time_of_down_duration-(-1) < Double.MIN_VALUE){
-                        mean_time_of_down_duration = duration;
-                    }
-                    else if(duration > mean_time_of_down_duration * 0.8){
-                        mean_time_of_down_duration =
-                                (mean_time_of_down_duration + (timestampedPerson.timestamp - last_down))/2;
+                    long duration = timestampedPerson.timestamp - last_up;
+                    if(mean_time_of_downing < 0) {
+                        mean_time_of_downing = duration;
                         last_down = timestampedPerson.timestamp;
                         state = 2;
+                        Log.i(TAG, "run: 1 -> 2");
                     }
+                    else {//if(duration > mean_time_of_downing * 0.8 && duration < mean_time_of_downing * 1.2){
+                        mean_time_of_downing = (mean_time_of_downing + duration)/2;
+                        last_down = timestampedPerson.timestamp;
+                        state = 2;
+                        Log.i(TAG, "run: 1 -> 2");
+                    }
+                    //else{}
                 }
 
             }
             else if(state==2){ // 앉아있음
                 if(filteredScored > UP_PROB_THRESHOLD){
-                    long duration = timestampedPerson.timestamp - last_up;
-                    if (mean_time_of_up_duration -(-1) < Double.MIN_VALUE) {
-                        mean_time_of_up_duration = duration;
-                    }
-                    else if(duration > mean_time_of_up_duration * 0.8){
-                        mean_time_of_up_duration = (mean_time_of_up_duration + (timestampedPerson.timestamp - last_up))/2;
+                    long duration = timestampedPerson.timestamp - last_down;
+                    if (mean_time_of_upping < 0) {
+                        mean_time_of_upping = duration;
                         last_up = timestampedPerson.timestamp;
                         state = 1;
                         count += 1;
-                        Log.i(TAG, "run: count++ : " + count);
-
+                        Log.i(TAG, "run: 2 -> 1 count++ : " + count);
                     }
+                    else {//if(duration > mean_time_of_upping * 0.8 && duration < mean_time_of_upping * 1.2){
+                        mean_time_of_upping = (mean_time_of_upping + duration)/2;
+                        last_up = timestampedPerson.timestamp;
+                        state = 1;
+                        count += 1;
+                        Log.i(TAG, "run: 2 -> 1 count++ : " + count);
+                    }
+                    //else{}
                 }
             }
 

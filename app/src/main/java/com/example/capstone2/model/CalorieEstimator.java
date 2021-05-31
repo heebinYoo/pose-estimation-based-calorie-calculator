@@ -140,7 +140,8 @@ class PosenetRunnable implements Runnable{
                 timestampedBitmap.bitmap.recycle();
 
                 person.mark = worknet.estimateSinglePose(new NormalizedPerson(person).getFlattenKeyPointArray());
-                Log.i("hi", "run: " + person.mark);
+
+
 
                 TimestampedPerson timestampedPerson = new TimestampedPerson(timestampedBitmap.timestamp, person);
                 personQueue.put(timestampedPerson);
