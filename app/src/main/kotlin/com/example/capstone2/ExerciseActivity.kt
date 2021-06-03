@@ -3,8 +3,10 @@ package com.example.capstone2
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ProgressDialog
 import android.content.pm.PackageManager
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.media.Image
 import android.media.Ringtone
 import android.media.RingtoneManager
@@ -13,6 +15,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -41,6 +44,7 @@ class ExerciseActivity : AppCompatActivity() {
     private final var BUZZER_TYPE_1 : Int = 1
     private final var BUZZER_TYPE_2 : Int = 2
 
+    private lateinit var exerciseType : Exercise
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,10 +59,33 @@ class ExerciseActivity : AppCompatActivity() {
                     this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
 
+        val alertDialog = AlertDialog.Builder(this)
+            .setTitle("운동을 선택하세요.")
+            .setItems(R.array.exericse) { _, pos ->
+                val items = resources.getStringArray(R.array.exericse)
+                Toast.makeText(applicationContext, items[pos],Toast.LENGTH_SHORT).show()
+                when (pos) {
+                    0 -> {
+                        exerciseType = Exercise.LEG
+                    }
+                    1 -> {
+                        exerciseType = Exercise.ARM
+                    }
+                    2 -> {
+                        exerciseType = Exercise.SQURT
+                    }
+                }
+
+
+            }.create()
+        alertDialog.show()
+
+
+
 
         var startstopbtn = findViewById<Button>(R.id.startstop)
         startstopbtn.setOnClickListener {
-            if(!startstopbtn.text.equals("stop")) {
+            if(startstopbtn.text.equals("start")) {
 
                 var ac:AppCompatActivity = this
                 timerTask = kotlin.concurrent.timer(period = 1000) {
@@ -69,7 +96,7 @@ class ExerciseActivity : AppCompatActivity() {
                             buzzer(BUZZER_TYPE_2)
                             timerTask.cancel()
                             startstopbtn.text = "stop"
-                            poseAnalyzer = PoseAnalyzer(ac)
+                            poseAnalyzer = PoseAnalyzer(ac, exerciseType)
                             imageAnalyzer.setAnalyzer(cameraExecutor, poseAnalyzer)
                         }
                     } else {
@@ -82,9 +109,13 @@ class ExerciseActivity : AppCompatActivity() {
             }
             else {
                 startstopbtn.isEnabled = false
+                startstopbtn.text = "정리중"
+                Toast.makeText(this, "정리 작업중입니다. 곧 자동으로 꺼집니다.", Toast.LENGTH_LONG).show()
                 imageAnalyzer.clearAnalyzer()
+                Toast.makeText(this, "1단계 / 총 2단계 완료", Toast.LENGTH_LONG).show()
                 poseAnalyzer.stop()
-                finish();
+                Toast.makeText(this, "마무리 완료", Toast.LENGTH_LONG).show()
+                finish()
             }
         }
 
@@ -92,6 +123,9 @@ class ExerciseActivity : AppCompatActivity() {
 
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
+
+
+
 
     private fun buzzer(type:Int){
         if(type==BUZZER_TYPE_1) {
@@ -194,7 +228,7 @@ class ExerciseActivity : AppCompatActivity() {
     }
 }
 
-private class PoseAnalyzer(activityContext: AppCompatActivity) : ImageAnalysis.Analyzer {
+private class PoseAnalyzer(activityContext: AppCompatActivity, exerciseType: Exercise) : ImageAnalysis.Analyzer {
     private var lastAnalyzedTimestamp = 0L
     private var calorieEstimator : CalorieEstimator? = null
     private var converter : YuvToRgbConverter? =null
@@ -204,12 +238,13 @@ private class PoseAnalyzer(activityContext: AppCompatActivity) : ImageAnalysis.A
     private val db: WorkTimeAndCalorieDatabase
 
     init{
-        this.calorieEstimator = CalorieEstimator(Exercise.LEG, activityContext)
+        this.calorieEstimator = CalorieEstimator(exerciseType, activityContext)
         this.converter = YuvToRgbConverter(activityContext)
         this.db = WorkTimeAndCalorieDatabase.getInstance(activityContext)
     }
 
     fun stop(){
+        //TerminatingTask(activityContext).execute(calorieEstimator)
         val workTimeAndCalorie = calorieEstimator!!.stop()
 
         workTimeAndCalorie.datetime = System.currentTimeMillis()
@@ -218,8 +253,8 @@ private class PoseAnalyzer(activityContext: AppCompatActivity) : ImageAnalysis.A
             val dao = db.workTimeAndCalorieDao()
             dao.insert(workTimeAndCalorie)
         }.start()
-
     }
+
 
     @SuppressLint("UnsafeExperimentalUsageError")
     override fun analyze(imageProxy: ImageProxy) {

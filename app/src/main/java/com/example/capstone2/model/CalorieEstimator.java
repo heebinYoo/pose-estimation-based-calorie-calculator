@@ -4,6 +4,7 @@ package com.example.capstone2.model;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -37,6 +38,7 @@ public class CalorieEstimator {
     private PriorityBlockingQueue<TimestampedPerson> personQueue = new PriorityBlockingQueue<>(1024);
 
     private ArrayList<PosenetRunnable> posenetRunnables = new ArrayList<>();
+    private ArrayList<Thread> posenetThreads = new ArrayList<>();
 
 
     private NeuralCounterManager neuralCounterManager;
@@ -55,7 +57,9 @@ public class CalorieEstimator {
                     imageQueue,
                     personQueue,
                     worknetFactory.buildWorknet(exercise, activityContext));
-            new Thread(posenetRunnable).start();
+            Thread th = new Thread(posenetRunnable);
+            th.start();
+            posenetThreads.add(th);
             posenetRunnables.add(posenetRunnable);
         }
         neuralCounterManager = new NeuralCounterManager(personQueue, activityContext);
@@ -74,10 +78,24 @@ public class CalorieEstimator {
     }
 
     public WorkTimeAndCalorie stop() {
+
+
+
         Iterator<PosenetRunnable> itr = posenetRunnables.iterator();
         while(itr.hasNext()){
-            itr.next().stop();
+            PosenetRunnable posenetRunnable =  itr.next();
+            posenetRunnable.stop();
         }
+        Iterator<Thread> itrt = posenetThreads.iterator();
+        while(itrt.hasNext()){
+            try {
+                itrt.next().join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+
         neuralCounterManager.stop();
         try {
             neuralCounterThread.join();
@@ -106,17 +124,19 @@ public class CalorieEstimator {
 
 class PosenetRunnable implements Runnable{
     private Posenet posenet;
+    private AppCompatActivity context;
     private BlockingQueue<TimestampedBitmap> imageQueue;
     private PriorityBlockingQueue<TimestampedPerson> personQueue;
     private boolean terminate = false;
     private Worknet worknet;
 
-    PosenetRunnable(Context context,
+    PosenetRunnable(AppCompatActivity context,
                     BlockingQueue<TimestampedBitmap> imageQueue,
                     PriorityBlockingQueue<TimestampedPerson> personQueue,
                     Worknet worknet
                     ){
         this.posenet = new Posenet(context);
+        this.context = context;
         this.imageQueue = imageQueue;
         this.personQueue = personQueue;
         this.worknet = worknet;
@@ -125,8 +145,11 @@ class PosenetRunnable implements Runnable{
     @Override
     public void run() {
         while(true) {
-            if (terminate)
+            if (terminate && imageQueue.isEmpty())
                 break;
+
+            if(terminate)
+                Log.i("CalorieEstimator", "left : " + imageQueue.size());
 
             try {
                 TimestampedBitmap timestampedBitmap = imageQueue.take();

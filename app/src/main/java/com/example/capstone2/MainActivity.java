@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         boolean checkFirst = PreferenceManager.getBoolean(this, PreferenceKeys.checkFirst);
-        if(!checkFirst || true){
+        if(!checkFirst){
             PreferenceManager.setBoolean(this, PreferenceKeys.checkFirst, true);
             Intent intent = new Intent(MainActivity.this, TutorialActivity.class);
             startActivityForResult(intent, tutorialRequestCode);
