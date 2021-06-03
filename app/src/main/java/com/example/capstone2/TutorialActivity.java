@@ -104,7 +104,7 @@ public class TutorialActivity extends AppCompatActivity {
     }
 
     private void moveMainPage() {
-        startActivity(new Intent(TutorialActivity.this, MainActivity.class));
+        setResult(RESULT_OK,getIntent());
         finish();
     }
 

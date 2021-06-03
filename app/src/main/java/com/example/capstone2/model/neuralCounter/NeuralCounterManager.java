@@ -10,6 +10,7 @@ import com.example.capstone2.PoseNetSimpleTest;
 import com.example.capstone2.R;
 import com.example.capstone2.model.util.TimestampedPerson;
 
+import java.text.SimpleDateFormat;
 import java.util.concurrent.PriorityBlockingQueue;
 
 public class NeuralCounterManager  implements Runnable{
@@ -150,15 +151,18 @@ public class NeuralCounterManager  implements Runnable{
                 nearArray[i] = nearArray[i+1];
             }
 
+            //SimpleDateFormat format1 = new SimpleDateFormat ( "yyyy-MM-dd HH:mm:ss");
+
+
                 //TODO for debug
                 if(activityContext instanceof PoseNetSimpleTest) {
                     activityContext.runOnUiThread(new Runnable() {
                         TextView textView = activityContext.findViewById(R.id.currentTimeText);
-                        TextView counterTextView = activityContext.findViewById(R.id.dtwinitText);
+                        TextView counterTextView = activityContext.findViewById(R.id.testcountText);
 
                         @Override
                         public void run() {
-                            textView.setText(" now : " + timestampedPerson.timestamp);
+                            textView.setText(String.format(" 처리중 : %d.%03d", (timestampedPerson.timestamp - startTime) / 1000, (timestampedPerson.timestamp - startTime) % 1000));
                             counterTextView.setText("count : " +  count);
                         }
                     });
@@ -166,11 +170,11 @@ public class NeuralCounterManager  implements Runnable{
                 else if(activityContext instanceof ExerciseActivity){
                     activityContext.runOnUiThread(new Runnable() {
                         TextView textView = activityContext.findViewById(R.id.timeText);
-                        TextView counterTextView = activityContext.findViewById(R.id.dtwinitText);
+                        TextView counterTextView = activityContext.findViewById(R.id.countText);
 
                         @Override
                         public void run() {
-                            textView.setText(" now : " + timestampedPerson.timestamp);
+                            textView.setText(String.format(" 처리중 : %d.%03d", (timestampedPerson.timestamp - startTime) / 1000, (timestampedPerson.timestamp - startTime) % 1000));
                             counterTextView.setText("count : " +  count);
                         }
                     });

@@ -75,7 +75,7 @@ class ExerciseActivity : AppCompatActivity() {
                     } else {
                         runOnUiThread {
                             buzzer(BUZZER_TYPE_1)
-                            startstopbtn.text = time.toString()
+                            startstopbtn.text = (4 - time).toString()
                         }
                     }
                 }

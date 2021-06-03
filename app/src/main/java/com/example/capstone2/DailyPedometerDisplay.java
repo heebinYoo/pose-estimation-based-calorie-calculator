@@ -8,7 +8,6 @@ import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,8 +15,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.DatePicker;
-import android.widget.ImageView;
+import android.widget.HeaderViewListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,14 +26,12 @@ import com.example.capstone2.database.vo.WorkTimeAndCalorie;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class DailyPedometerDisplay extends AppCompatActivity {
     private ListView listView;
-    private listAdapter adapter;
+    private PedometerListAdapter adapter;
 
     private Calendar startCalendar = null;
     private Calendar endCalendar = null;
@@ -45,6 +41,11 @@ public class DailyPedometerDisplay extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_daily_pedometer_display);
         listView = findViewById(R.id.listview);
+
+        final View header = getLayoutInflater().inflate(R.layout.daily_pedeometer_header, null, false) ;
+        listView.addHeaderView(header) ;
+
+
 
         Toast.makeText(this, "리스트 항목을 꾹 누르면 삭제할 수 있습니다.", Toast.LENGTH_LONG ).show();
 
@@ -62,7 +63,10 @@ public class DailyPedometerDisplay extends AppCompatActivity {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
 
-                WorkTimeAndCalorie workTimeAndCalorie = ((listAdapter)(((ListView)parent).getAdapter())).lists.get(position);
+                HeaderViewListAdapter headerViewListAdapter = (HeaderViewListAdapter) ((ListView)parent).getAdapter();
+                PedometerListAdapter listAdapter = ((PedometerListAdapter) headerViewListAdapter.getWrappedAdapter());
+
+                WorkTimeAndCalorie workTimeAndCalorie = listAdapter.lists.get((int) id);
                 AlertDialog.Builder builder = new AlertDialog.Builder(activityContext);
 
                 builder.setTitle("삭제하시겠습니까?");
@@ -82,12 +86,7 @@ public class DailyPedometerDisplay extends AppCompatActivity {
                     }
                 });
 
-                builder.setNegativeButton("취소", new DialogInterface.OnClickListener(){
-                    @Override
-                    public void onClick(DialogInterface dialog, int id)
-                    {
-                    }
-                });
+                builder.setNegativeButton("취소", (dialog, id1) -> {});
 
                 AlertDialog alertDialog = builder.create();
                 alertDialog.show();
@@ -99,13 +98,13 @@ public class DailyPedometerDisplay extends AppCompatActivity {
 
 
 
-        Button startEditTextDateBtn = findViewById(R.id.startEditTextDate);
+        Button startEditTextDateBtn = header.findViewById(R.id.startEditTextDate);
         startEditTextDateBtn.setOnClickListener(v -> {
             DatePickerDialog datePickerDialog = new DatePickerDialog(this,0);
 
             datePickerDialog.setOnDateSetListener((view, year, month, dayOfMonth) -> {
 
-                ((Button)v).setText(String.format("시작 : %d/%d/%d", year, month, dayOfMonth));
+                ((Button)v).setText(String.format("시작 : %d/%d/%d", year, month+1, dayOfMonth));
                 startCalendar = Calendar.getInstance();
                 startCalendar.set(Calendar.YEAR, year);
                 startCalendar.set(Calendar.MONTH, month);
@@ -115,13 +114,13 @@ public class DailyPedometerDisplay extends AppCompatActivity {
             datePickerDialog.show();
         });
 
-        Button endEditTextDateBtn = findViewById(R.id.endEditTextDate);
+        Button endEditTextDateBtn = header.findViewById(R.id.endEditTextDate);
         endEditTextDateBtn.setOnClickListener(v -> {
             DatePickerDialog datePickerDialog = new DatePickerDialog(this,0);
 
             datePickerDialog.setOnDateSetListener((view, year, month, dayOfMonth) -> {
 
-                ((Button)v).setText(String.format("끝 : %d/%d/%d", year, month, dayOfMonth));
+                ((Button)v).setText(String.format("끝 : %d/%d/%d", year, month+1, dayOfMonth));
                 endCalendar = Calendar.getInstance();
                 endCalendar.set(Calendar.YEAR, year);
                 endCalendar.set(Calendar.MONTH, month);
@@ -130,7 +129,7 @@ public class DailyPedometerDisplay extends AppCompatActivity {
             datePickerDialog.show();
         });
 
-     findViewById(R.id.pedeometerSearchBtn).setOnClickListener((v)->{
+        header.findViewById(R.id.pedeometerSearchBtn).setOnClickListener((v)->{
          if(startCalendar!=null && endCalendar!=null){
              new Thread(() -> {
                  WorkTimeAndCalorieDao dao = db.workTimeAndCalorieDao();
@@ -149,7 +148,7 @@ public class DailyPedometerDisplay extends AppCompatActivity {
 
 
     private void setupView(AtomicReference<List<WorkTimeAndCalorie>> list){
-        adapter = new listAdapter(list.get());
+        adapter = new PedometerListAdapter(list.get());
         listView.setAdapter(adapter);
     }
 
@@ -157,10 +156,10 @@ public class DailyPedometerDisplay extends AppCompatActivity {
 
 
 
-    class listAdapter extends BaseAdapter{
+    class PedometerListAdapter extends BaseAdapter{
         List<WorkTimeAndCalorie> lists;
 
-        public listAdapter(List<WorkTimeAndCalorie> lists) {
+        public PedometerListAdapter(List<WorkTimeAndCalorie> lists) {
             this.lists = lists;
         }
 
