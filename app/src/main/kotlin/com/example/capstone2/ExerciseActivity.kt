@@ -3,7 +3,6 @@ package com.example.capstone2
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.ProgressDialog
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Matrix
@@ -41,10 +40,11 @@ class ExerciseActivity : AppCompatActivity() {
     private lateinit var timerTask: Timer
     private var time : Int = 0
 
-    private final var BUZZER_TYPE_1 : Int = 1
-    private final var BUZZER_TYPE_2 : Int = 2
+    private var BUZZER_TYPE_1 : Int = 1
+    private var BUZZER_TYPE_2 : Int = 2
 
     private lateinit var exerciseType : Exercise
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -256,6 +256,7 @@ private class PoseAnalyzer(activityContext: AppCompatActivity, exerciseType: Exe
     }
 
 
+
     @SuppressLint("UnsafeExperimentalUsageError")
     override fun analyze(imageProxy: ImageProxy) {
         if (!::bitmapBuffer.isInitialized) {
@@ -265,19 +266,22 @@ private class PoseAnalyzer(activityContext: AppCompatActivity, exerciseType: Exe
         }
 
 
+
+        // TODO : 디바이스 속도 맞춰서 잘 해보세요.
         val currentTimestamp = System.currentTimeMillis()
-        if (currentTimestamp - lastAnalyzedTimestamp >= 33) {
+        if (currentTimestamp - lastAnalyzedTimestamp >= frameDuration) {
             //Log.i("td", "analyze: good$currentTimestamp")
             var image : Image? = imageProxy.image
             converter!!.yuvToRgb(image!!, this.bitmapBuffer)
 
 
+            //TODO : check device compatibility
             val rotateMatrix = Matrix()
-            rotateMatrix.postRotate(90f) //-360~360
-
-            val sideInversionImg = Bitmap.createBitmap(bitmapBuffer!!, 0, 0,
-                    bitmapBuffer.width, bitmapBuffer.height, null, false)
-
+            rotateMatrix.preRotate(-90f) // rotate
+            rotateMatrix.postScale(-1.0f, 1.0f) // flip
+            val sideInversionImg = Bitmap.createBitmap(
+                bitmapBuffer, 0, 0,
+                    bitmapBuffer.width, bitmapBuffer.height, rotateMatrix, false)
 
             this.calorieEstimator!!.put(TimestampedBitmap(currentTimestamp, sideInversionImg!!.copy(sideInversionImg.config, true)))
             sideInversionImg.recycle()
@@ -288,3 +292,7 @@ private class PoseAnalyzer(activityContext: AppCompatActivity, exerciseType: Exe
         imageProxy.close()
     }
 }
+
+// 33 : 30 FPS
+// 90 : 10 FPS
+const val frameDuration:Long = 90//ms

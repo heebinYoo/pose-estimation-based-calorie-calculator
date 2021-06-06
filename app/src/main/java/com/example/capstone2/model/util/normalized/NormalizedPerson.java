@@ -27,6 +27,20 @@ public class NormalizedPerson {
     }
 
 
+    @Override
+    public String toString() {
+        String result = "";
+        for (int i = 0; i < 17; i++) {
+
+            result +=(float) normalizedKeyPoints.get(i).normPosition.x;
+            result +=",";
+            result +=(float) normalizedKeyPoints.get(i).normPosition.y;
+            result += "\n";
+        }
+
+        return result;
+    }
+
     public NormalizedPerson(){
     }
 

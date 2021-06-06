@@ -15,6 +15,8 @@ import com.example.capstone2.model.util.TimestampedPerson;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.PriorityBlockingQueue;
 
+import static com.example.capstone2.ExerciseActivityKt.frameDuration;
+
 public class NeuralCounterManager  implements Runnable{
 
     private final String TAG = "NeuralCounterManager";
@@ -27,8 +29,8 @@ public class NeuralCounterManager  implements Runnable{
     private TimestampedPerson[] nearArray = new TimestampedPerson[7];
     private final int LAST_NEAR_ARRAY_ELT = 6;
 
-    private final double UP_PROB_THRESHOLD = 0.8;
-    private final double DOWN_PROB_THRESHOLD = 0.2;
+    private final double UP_PROB_THRESHOLD = 0.60;//0.8;
+    private final double DOWN_PROB_THRESHOLD = 0.40;//0.2;
 
     private int state=0;
     private long last_up = 0;
@@ -36,10 +38,10 @@ public class NeuralCounterManager  implements Runnable{
     private double mean_time_of_upping = -1;
     private double mean_time_of_downing = -1;
 
-    private float POSE_SCORE_THRESHOLD = 0.3f;
+    private float POSE_SCORE_THRESHOLD = 0.8f;
 
     private long startTime=0;
-
+    private long idleFrame=0;
 
     public NeuralCounterManager(PriorityBlockingQueue<TimestampedPerson> personQueue, AppCompatActivity activityContext){
         this.personQueue = personQueue;
@@ -56,8 +58,11 @@ public class NeuralCounterManager  implements Runnable{
                 float score;
                 do {
                     timestampedPerson = personQueue.take();
+
+                    if(timestampedPerson.person==null)
+                        return;
                     score = timestampedPerson.person.score;
-                    Log.i(TAG, "run: score"+score);
+                    //Log.i(TAG, "run: score "+score);
                 } while(score<POSE_SCORE_THRESHOLD);
             } catch (InterruptedException e) {
                 continue;
@@ -74,16 +79,19 @@ public class NeuralCounterManager  implements Runnable{
                 float score = 0;
                 do {
                     timestampedPerson = personQueue.take();
-                    if (timestampedPerson.person != null)
+                    if (timestampedPerson.person != null) {
                         score = timestampedPerson.person.score;
-                    else
+                        idleFrame++;
+                    }
+                    else {
                         break;
-
+                    }
                 } while(score<POSE_SCORE_THRESHOLD);
+                idleFrame--;
 
                 if(timestampedPerson.person==null)
                     break;
-                //Log.i(TAG, "run: " + (timestampedPerson.person.score));
+                //Log.i(TAG, "run: score "+score);
             } catch (InterruptedException e) {
                 continue;
             }
@@ -184,7 +192,7 @@ public class NeuralCounterManager  implements Runnable{
                         @Override
                         public void run() {
                             if(startTime!=0)
-                                textView.setText(String.format(" 처리중 : %d.%03d", (finalTimestampedPerson.timestamp - startTime) / 1000, (finalTimestampedPerson.timestamp - startTime) % 1000));
+                                //textView.setText(String.format(" 처리중 : %d.%03d", (finalTimestampedPerson.timestamp - startTime) / 1000, (finalTimestampedPerson.timestamp - startTime) % 1000));
                             counterTextView.setText("count : " +  count);
                             counterTextView.setTextColor(count%2==0?Color.RED:Color.BLUE);
                         }
@@ -199,7 +207,9 @@ public class NeuralCounterManager  implements Runnable{
                         @Override
                         public void run() {
                             if(startTime!=0)
-                                textView.setText(String.format(" 처리중 : %d.%03d", (finalTimestampedPerson1.timestamp - startTime) / 1000, (finalTimestampedPerson1.timestamp - startTime) % 1000));
+                            //textView.setText(String.format(" 처리중 : %d, real : %d", (finalTimestampedPerson1.timestamp - startTime) / 1000, (System.currentTimeMillis() - startTime) / 1000));
+
+                                textView.setText(String.format(" 운동 시간 : %d", (finalTimestampedPerson1.timestamp - startTime - idleFrame * frameDuration) / 1000));
                             counterTextView.setText("count : " +  count);
 
                             counterTextView.setTextColor(count%2==0?Color.RED:Color.BLUE);
@@ -210,7 +220,7 @@ public class NeuralCounterManager  implements Runnable{
 
         }
 
-        workingTime = last_up - startTime;
+        workingTime = last_up - startTime - idleFrame * frameDuration;
         Log.i(TAG, "run: done");
     }
 

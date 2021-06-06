@@ -79,8 +79,6 @@ public class CalorieEstimator {
 
     public WorkTimeAndCalorie stop() {
 
-
-
         Iterator<PosenetRunnable> itr = posenetRunnables.iterator();
         while(itr.hasNext()){
             PosenetRunnable posenetRunnable =  itr.next();
@@ -153,7 +151,8 @@ class PosenetRunnable implements Runnable{
 
             try {
                 TimestampedBitmap timestampedBitmap = imageQueue.take();
-
+                if(timestampedBitmap.bitmap==null)
+                    break;
 
                 Bitmap resizedBitmap = BitmapResizer.getResizedBitmap(timestampedBitmap.bitmap, 257, 257);
 
@@ -162,9 +161,10 @@ class PosenetRunnable implements Runnable{
                 ///재사용 금지!!!!!!!
                 timestampedBitmap.bitmap.recycle();
 
-                person.mark = worknet.estimateSinglePose(new NormalizedPerson(person).getFlattenKeyPointArray());
-
-
+                NormalizedPerson np = new NormalizedPerson(person);
+                person.mark = worknet.estimateSinglePose(np.getFlattenKeyPointArray());
+                if(person.mark < 0.1)
+                    Log.d("dd", "run: dd");
 
                 TimestampedPerson timestampedPerson = new TimestampedPerson(timestampedBitmap.timestamp, person);
                 personQueue.put(timestampedPerson);
@@ -178,6 +178,10 @@ class PosenetRunnable implements Runnable{
 
     public void stop() {
         this.terminate = true;
+        for (int i = 0; i < 5; i++) {
+            imageQueue.add(new TimestampedBitmap(Long.MAX_VALUE, null));
+        }
+
 
     }
 }
